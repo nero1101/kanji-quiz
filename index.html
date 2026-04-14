@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>かんじクイズ！✏️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ===== リセット・基本 ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow-x: hidden; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #fff9e6 0%, #ffecd2 100%);
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== 画面切替 ===== */
+    .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; padding: 24px 16px 40px; }
+    .screen.active { display: flex; }
+
+    /* ===== 共通パーツ ===== */
+    h1 { font-size: 2.4rem; font-weight: 900; color: #ff6b35; text-shadow: 2px 2px 0 #ffcba0; text-align: center; line-height: 1.2; }
+    h2 { font-size: 1.5rem; font-weight: 700; color: #333; margin-bottom: 16px; text-align: center; }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* ===== ボタン ===== */
+    .btn {
+      display: block;
+      width: 100%;
+      max-width: 320px;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      text-align: center;
+    }
+    .btn:active { transform: scale(.96); }
+    .btn-primary   { background: #ff6b35; color: #fff; box-shadow: 0 4px 0 #c94a1a; }
+    .btn-primary:active  { box-shadow: 0 1px 0 #c94a1a; transform: translateY(3px); }
+    .btn-secondary { background: #4ecdc4; color: #fff; box-shadow: 0 4px 0 #2da69e; }
+    .btn-secondary:active{ box-shadow: 0 1px 0 #2da69e; transform: translateY(3px); }
+    .btn-ghost     { background: #f0f0f0; color: #555; box-shadow: 0 4px 0 #c8c8c8; }
+    .btn-ghost:active    { box-shadow: 0 1px 0 #c8c8c8; transform: translateY(3px); }
+    .btn-danger    { background: #ff4757; color: #fff; box-shadow: 0 4px 0 #c0392b; }
+
+    /* ===== スタート画面 ===== */
+    #s-start { justify-content: center; gap: 32px; }
+    .title-emoji { font-size: 5rem; animation: bounce 1.5s infinite; display: block; text-align: center; }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-12px); }
+    }
+    .subtitle { font-size: 1rem; color: #888; text-align: center; }
+
+    /* ===== セットアップ画面 ===== */
+    #s-setup { gap: 20px; }
+    .series-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .series-btn {
+      padding: 14px 8px;
+      border: 3px solid #ddd;
+      border-radius: 16px;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      font-family: inherit;
+      font-size: .95rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .series-btn .series-emoji { font-size: 2.2rem; display: block; margin-bottom: 4px; }
+    .series-btn.selected { border-color: #ff6b35; background: #fff5f0; }
+
+    .drill-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 10px;
+    }
+    .drill-btn {
+      padding: 12px 4px;
+      border: 3px solid #ddd;
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      transition: border-color .15s, background .15s;
+      text-align: center;
+    }
+    .drill-btn.selected { border-color: #4ecdc4; background: #f0fffe; color: #2da69e; }
+
+    .section-label {
+      font-size: .85rem;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 10px;
+    }
+
+    /* ===== ローディング ===== */
+    #s-loading { justify-content: center; gap: 20px; }
+    .spinner {
+      width: 60px; height: 60px;
+      border: 6px solid #ffd;
+      border-top-color: #ff6b35;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== クイズ画面 ===== */
+    #s-quiz { gap: 16px; }
+
+    .progress-bar-wrap {
+      width: 100%;
+      max-width: 480px;
+      background: #ffe;
+      border-radius: 50px;
+      height: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,.1);
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6b35, #ffcc02);
+      border-radius: 50px;
+      transition: width .4s ease;
+    }
+
+    .stars-row {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .star { font-size: 1.6rem; transition: transform .2s; }
+    .star.lit { animation: starPop .3s ease; }
+    @keyframes starPop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.5)} }
+
+    .problem-card {
+      width: 100%;
+      max-width: 480px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .problem-number { font-size: .85rem; color: #aaa; margin-bottom: 4px; }
+    .problem-sentence {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #333;
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+    .problem-target {
+      display: inline-block;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #ff6b35;
+      background: #fff5f0;
+      border: 2px dashed #ff6b35;
+      border-radius: 12px;
+      padding: 4px 16px;
+    }
+    .problem-instruction {
+      font-size: 1rem;
+      color: #777;
+      margin-top: 8px;
+    }
+
+    /* ===== キャンバスエリア ===== */
+    .canvas-wrap {
+      position: relative;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    #draw-canvas {
+      display: block;
+      border-radius: 12px;
+      background: #fafafa;
+      border: 2px solid #ddd;
+      touch-action: none;
+    }
+
+    .canvas-actions {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 480px;
+    }
+    .canvas-actions .btn { flex: 1; padding: 14px; font-size: 1rem; }
+
+    /* ===== 正誤フィードバック ===== */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .overlay.show { display: flex; }
+    .overlay-correct { background: rgba(80,200,120,.92); }
+    .overlay-wrong   { background: rgba(255,80,80,.88); }
+
+    .feedback-icon { font-size: 7rem; animation: popIn .3s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes popIn { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+    .feedback-text { font-size: 2rem; font-weight: 900; color: #fff; text-align: center; }
+    .feedback-answer { font-size: 1.1rem; color: rgba(255,255,255,.9); text-align: center; }
+    .feedback-next {
+      background: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 40px;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ===== 紙吹雪 ===== */
+    .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 99; overflow: hidden; }
+    .confetti-piece {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ===== ご褒美画面 ===== */
+    #s-reward {
+      justify-content: center;
+      padding: 0;
+      background: #111;
+    }
+    .reward-bg { position: fixed; inset: 0; background: #000; z-index: 0; }
+    .reward-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 32px 16px;
+      animation: rewardIn .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes rewardIn { 0%{transform:scale(0) rotate(-10deg); opacity:0} 100%{transform:scale(1) rotate(0); opacity:1} }
+    .reward-title { font-size: 2.5rem; font-weight: 900; color: #ffd700; text-shadow: 0 0 20px #ff6b35; text-align: center; }
+    .reward-img {
+      max-width: min(90vw, 480px);
+      max-height: 60vh;
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(255,215,0,.4);
+      object-fit: contain;
+    }
+    .reward-msg { font-size: 1.1rem; color: #fff; text-align: center; }
+
+    /* ===== 結果画面 ===== */
+    #s-result { justify-content: center; gap: 24px; }
+    .result-score {
+      font-size: 5rem;
+      font-weight: 900;
+      color: #ff6b35;
+      text-align: center;
+      line-height: 1;
+    }
+    .result-score span { font-size: 1.8rem; color: #888; }
+    .result-msg { font-size: 1.2rem; color: #555; text-align: center; }
+    .wrong-list { width: 100%; max-width: 480px; }
+    .wrong-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 1rem;
+    }
+    .wrong-kanji { font-size: 1.5rem; font-weight: 700; color: #ff4757; min-width: 60px; }
+    .wrong-reading { color: #888; }
+
+    /* ===== エラー ===== */
+    .error-box {
+      background: #fff0f0;
+      border: 2px solid #ff4757;
+      border-radius: 12px;
+      padding: 16px;
+      color: #c0392b;
+      font-size: .95rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* ===== ローディングスピナー（インライン）===== */
+    .inline-spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 3px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================================
+     画面1: スタート
+     ======================================== -->
+<div id="s-start" class="screen active">
+  <span class="title-emoji">✏️</span>
+  <h1>かんじクイズ！</h1>
+  <p class="subtitle">漢字をかいて　れんしゅうしよう</p>
+  <button class="btn btn-primary" onclick="goSetup()">はじめる！</button>
+</div>
+
+<!-- ========================================
+     画面2: セットアップ（シリーズ＋ドリル選択）
+     ======================================== -->
+<div id="s-setup" class="screen">
+  <h2>⚙️ せってい</h2>
+
+  <!-- キャラクター選択 -->
+  <div class="card" style="max-width:480px;width:100%">
+    <div class="section-label">🎁 ごほうびキャラクター</div>
+    <div id="series-grid" class="series-grid">
+      <p style="color:#aaa;font-size:.9rem">よみこみ中...</p>
+    </div>
+  </div>
+
+  <!-- ドリル選択 -->
+  <div class="card" style="max-width:480px;width:100%">
+    <div class="section-label">📚 ドリルをえらぶ（いくつでもOK）</div>
+    <div id="drill-grid" class="drill-grid">
+      <p style="color:#aaa;font-size:.9rem">よみこみ中...</p>
+    </div>
+  </div>
+
+  <div id="setup-error" style="display:none" class="error-box"></div>
+
+  <button class="btn btn-primary" id="start-btn" onclick="startQuiz()" disabled
+          style="opacity:.5;max-width:320px">
+    スタート！🚀
+  </button>
+  <button class="btn btn-ghost" onclick="showScreen('s-start')" style="max-width:320px">もどる</button>
+</div>
+
+<!-- ========================================
+     画面3: ローディング
+     ======================================== -->
+<div id="s-loading" class="screen">
+  <div class="spinner"></div>
+  <p style="color:#888;font-size:1rem">もんだいをよみこんでいます…</p>
+</div>
+
+<!-- ========================================
+     画面4: クイズ
+     ======================================== -->
+<div id="s-quiz" class="screen">
+  <!-- 進捗バー -->
+  <div style="width:100%;max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span id="q-count" style="font-size:.9rem;color:#888"></span>
+      <span id="q-score" style="font-size:.9rem;color:#4ecdc4;font-weight:700"></span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- ⭐ スター（10問ごとのご褒美カウンター）-->
+  <div class="stars-row" id="stars-row"></div>
+
+  <!-- 問題カード -->
+  <div class="problem-card">
+    <div class="problem-number" id="p-number"></div>
+    <div class="problem-sentence" id="p-sentence"></div>
+    <div class="problem-target" id="p-target"></div>
+    <div class="problem-instruction">↑ かんじで書いてみよう！</div>
+  </div>
+
+  <!-- キャンバス -->
+  <div class="canvas-wrap">
+    <canvas id="draw-canvas" width="320" height="200"></canvas>
+  </div>
+
+  <div class="canvas-actions">
+    <button class="btn btn-ghost" onclick="clearDraw()">けす🗑️</button>
+    <button class="btn btn-primary" id="check-btn" onclick="checkAnswer()">かくにんする✅</button>
+  </div>
+</div>
+
+<!-- ========================================
+     正誤フィードバック（オーバーレイ）
+     ======================================== -->
+<div id="overlay-correct" class="overlay overlay-correct">
+  <div class="feedback-icon">⭕</div>
+  <div class="feedback-text">せいかい！🎉</div>
+  <button class="feedback-next" onclick="nextQuestion()">つぎへ ▶</button>
+</div>
+
+<div id="overlay-wrong" class="overlay overlay-wrong">
+  <div class="feedback-icon">❌</div>
+  <div class="feedback-text">ざんねん！</div>
+  <div class="feedback-answer" id="wrong-answer-text"></div>
+  <button class="feedback-next" onclick="nextQuestion()">つぎへ ▶</button>
+</div>
+
+<div class="confetti-container" id="confetti-container"></div>
+
+<!-- ========================================
+     画面5: ご褒美
+     ======================================== -->
+<div id="s-reward" class="screen">
+  <div class="reward-bg"></div>
+  <div class="reward-content">
+    <div class="reward-title" id="reward-title">🎊 すごい！10もんクリア！ 🎊</div>
+    <img id="reward-img" class="reward-img" src="" alt="ごほうび" onerror="this.style.display='none'">
+    <div class="reward-msg" id="reward-msg"></div>
+    <button class="btn btn-primary" onclick="continueAfterReward()" style="max-width:280px">
+      つづける！💪
+    </button>
+  </div>
+</div>
+
+<!-- ========================================
+     画面6: 結果
+     ======================================== -->
+<div id="s-result" class="screen">
+  <h1 style="font-size:2rem">けっか！📊</h1>
+
+  <div class="card" style="max-width:480px;width:100%;text-align:center">
+    <div class="result-score" id="result-score">
+      0<span>てん</span>
+    </div>
+    <div class="result-msg" id="result-msg" style="margin-top:8px"></div>
+  </div>
+
+  <!-- 間違えた漢字リスト -->
+  <div class="card wrong-list" id="wrong-list-card" style="max-width:480px;display:none">
+    <div class="section-label">📝 もう一度れんしゅうしよう</div>
+    <div id="wrong-list"></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="goSetup()" style="max-width:320px">もう一度！🔁</button>
+  <button class="btn btn-ghost"   onclick="showScreen('s-start')" style="max-width:320px">トップへ</button>
+</div>
+
+<!-- ========================================
+     スクリプト
+     ======================================== -->
+<script>
+// ============================================================
+//  設定 ── デプロイ後に GAS の URL に書き換えてください
+// ============================================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby23IUfujJUfA37-nCd2TNfM9fmY4JnQxUPGKa1mcSXZP_P-LXGh123akBCjw6Lq5U1/exec';
+
+// ============================================================
+//  アプリ状態
+// ============================================================
+const state = {
+  seriesList     : [],
+  selectedSeries : null,
+  selectedDrills : new Set(),
+  problems       : [],
+  shuffled       : [],
+  current        : 0,
+  correct        : 0,
+  answeredTotal  : 0,
+  answeredSince  : 0,   // ご褒美までのカウンター
+  wrongItems     : [],
+  rewardImages   : [],
+};
+
+// ============================================================
+//  画面切替
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+//  GAS API 呼び出し
+// ============================================================
+async function api(params) {
+  const url = GAS_URL + '?' + new URLSearchParams(params).toString();
+  const res  = await fetch(url);
+  return res.json();
+}
+
+// ============================================================
+//  スタート → セットアップ画面
+// ============================================================
+async function goSetup() {
+  showScreen('s-setup');
+  document.getElementById('setup-error').style.display = 'none';
+
+  // シリーズ一覧を取得
+  try {
+    const [sData, dData] = await Promise.all([
+      api({ action: 'getRewardSeries' }),
+      api({ action: 'getDrillList' }),
+    ]);
+
+    renderSeriesGrid(sData.series || []);
+    renderDrillGrid(dData.drills || []);
+  } catch (e) {
+    showSetupError('サーバーへの接続に失敗しました。GAS_URL を確認してください。\n' + e.message);
+  }
+}
+
+function renderSeriesGrid(series) {
+  state.seriesList = series;
+  const grid = document.getElementById('series-grid');
+  if (!series.length) { grid.innerHTML = '<p style="color:#aaa;font-size:.9rem">シリーズがありません</p>'; return; }
+
+  grid.innerHTML = '';
+  series.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'series-btn';
+    btn.innerHTML = `<span class="series-emoji">${s.emoji}</span>${s.name}`;
+    btn.onclick = () => {
+      document.querySelectorAll('.series-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.selectedSeries = s;
+      updateStartBtn();
+    };
+    grid.appendChild(btn);
+    if (i === 0) btn.click(); // デフォルト選択
+  });
+}
+
+function renderDrillGrid(drills) {
+  const grid = document.getElementById('drill-grid');
+  if (!drills.length) { grid.innerHTML = '<p style="color:#aaa;font-size:.9rem">ドリルがありません</p>'; return; }
+
+  grid.innerHTML = '';
+  drills.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'drill-btn';
+    btn.textContent = d;
+    btn.onclick = () => {
+      btn.classList.toggle('selected');
+      if (state.selectedDrills.has(d)) state.selectedDrills.delete(d);
+      else state.selectedDrills.add(d);
+      updateStartBtn();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function updateStartBtn() {
+  const ok = state.selectedSeries && state.selectedDrills.size > 0;
+  const btn = document.getElementById('start-btn');
+  btn.disabled = !ok;
+  btn.style.opacity = ok ? '1' : '.5';
+}
+
+function showSetupError(msg) {
+  const el = document.getElementById('setup-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ============================================================
+//  クイズ開始
+// ============================================================
+async function startQuiz() {
+  showScreen('s-loading');
+
+  try {
+    // 問題とご褒美画像を並行取得
+    const [pData, rData] = await Promise.all([
+      api({ action: 'getProblems', drills: [...state.selectedDrills].join(',') }),
+      api({ action: 'getRewardImages', folderId: state.selectedSeries.folderId }),
+    ]);
+
+    if (!pData.problems || pData.problems.length === 0) {
+      showSetupError('選択したドリルに問題がありません。');
+      showScreen('s-setup');
+      return;
+    }
+
+    state.problems       = pData.problems;
+    state.shuffled       = shuffle([...pData.problems]);
+    state.rewardImages   = rData.images || [];
+    state.current        = 0;
+    state.correct        = 0;
+    state.answeredTotal  = 0;
+    state.answeredSince  = 0;
+    state.wrongItems     = [];
+
+    buildStars();
+    showScreen('s-quiz');
+    renderQuestion();
+  } catch (e) {
+    showSetupError('問題の読み込みに失敗しました。\n' + e.message);
+    showScreen('s-setup');
+  }
+}
+
+// ============================================================
+//  問題表示
+// ============================================================
+function renderQuestion() {
+  const total = state.shuffled.length;
+  const idx   = state.current;
+  if (idx >= total) { showResult(); return; }
+
+  const p = state.shuffled[idx];
+
+  // 進捗
+  document.getElementById('q-count').textContent  = `${idx + 1} / ${total}`;
+  document.getElementById('q-score').textContent  = `⭐ ${state.correct} せいかい`;
+  document.getElementById('progress-fill').style.width = ((idx / total) * 100) + '%';
+
+  // スター更新
+  updateStars();
+
+  // 問題文
+  document.getElementById('p-number').textContent   = `ドリル ${p.drillNum} ⬩ もんだい ${p.questionNum}`;
+
+  // 文章中の target を赤くマーク
+  const sentence = p.sentence.replace(
+    p.target,
+    `<span style="color:#ff6b35;font-weight:900">${p.target}</span>`
+  );
+  document.getElementById('p-sentence').innerHTML = sentence;
+  document.getElementById('p-target').textContent = `「 ${p.target} 」`;
+
+  // キャンバスリセット
+  initCanvas(p.answer.length);
+}
+
+// ============================================================
+//  スターUI
+// ============================================================
+const REWARD_EVERY = 10;
+
+function buildStars() {
+  const row = document.getElementById('stars-row');
+  row.innerHTML = '';
+  for (let i = 0; i < REWARD_EVERY; i++) {
+    const s = document.createElement('span');
+    s.className = 'star';
+    s.textContent = '☆';
+    s.id = 'star-' + i;
+    row.appendChild(s);
+  }
+}
+
+function updateStars() {
+  for (let i = 0; i < REWARD_EVERY; i++) {
+    const el = document.getElementById('star-' + i);
+    if (!el) return;
+    const lit = i < state.answeredSince;
+    el.textContent = lit ? '⭐' : '☆';
+    if (lit && !el.classList.contains('lit')) el.classList.add('lit');
+  }
+}
+
+// ============================================================
+//  キャンバス描画
+// ============================================================
+let canvas, ctx, strokes, drawing, currentStroke, canvasInited = false;
+
+function initCanvas(charCount) {
+  if (!canvas) {
+    canvas = document.getElementById('draw-canvas');
+    ctx    = canvas.getContext('2d');
+    setupCanvasEvents();
+  }
+
+  // サイズ決定（1文字あたり最大160px）
+  const maxW   = Math.min(window.innerWidth - 48, 480);
+  const cell   = Math.min(Math.floor(maxW / Math.max(charCount, 1)), 160);
+  const totalW = cell * charCount;
+  const totalH = cell;
+
+  canvas.width  = totalW;
+  canvas.height = totalH;
+  canvas.style.width  = totalW + 'px';
+  canvas.style.height = totalH + 'px';
+
+  strokes       = [];
+  drawing       = false;
+  currentStroke = null;
+
+  drawGuidelines(charCount, cell, totalW, totalH);
+}
+
+function drawGuidelines(count, cell, W, H) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = '#ddd';
+  ctx.lineWidth   = 1;
+
+  for (let i = 0; i < count; i++) {
+    const x = i * cell;
+    // 外枠
+    ctx.strokeRect(x + 1, 1, cell - 2, H - 2);
+    // 田字格（補助線）
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x + cell / 2, 2);
+    ctx.lineTo(x + cell / 2, H - 2);
+    ctx.moveTo(x + 2, H / 2);
+    ctx.lineTo(x + cell - 2, H / 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function setupCanvasEvents() {
+  canvas.addEventListener('pointerdown',  onPointerDown, { passive: false });
+  canvas.addEventListener('pointermove',  onPointerMove, { passive: false });
+  canvas.addEventListener('pointerup',    onPointerUp);
+  canvas.addEventListener('pointercancel',onPointerUp);
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const sx   = canvas.width  / rect.width;
+  const sy   = canvas.height / rect.height;
+  return {
+    x: (e.clientX - rect.left) * sx,
+    y: (e.clientY - rect.top)  * sy,
+  };
+}
+
+function onPointerDown(e) {
+  e.preventDefault();
+  drawing       = true;
+  const p       = getPos(e);
+  currentStroke = { x: [p.x], y: [p.y], t: [Date.now()] };
+  ctx.lineWidth   = 4;
+  ctx.strokeStyle = '#222';
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  canvas.setPointerCapture(e.pointerId);
+}
+
+function onPointerMove(e) {
+  if (!drawing) return;
+  e.preventDefault();
+  const p = getPos(e);
+  currentStroke.x.push(p.x);
+  currentStroke.y.push(p.y);
+  currentStroke.t.push(Date.now());
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+}
+
+function onPointerUp() {
+  if (!drawing) return;
+  drawing = false;
+  if (currentStroke && currentStroke.x.length > 1) {
+    strokes.push(sampleStroke(currentStroke, 15));
+  }
+  currentStroke = null;
+}
+
+// ストロークをダウンサンプリング（URL長さ対策）
+function sampleStroke(stroke, maxPts) {
+  if (stroke.x.length <= maxPts) return stroke;
+  const step = (stroke.x.length - 1) / (maxPts - 1);
+  const x = [], y = [], t = [];
+  for (let i = 0; i < maxPts; i++) {
+    const idx = Math.round(i * step);
+    x.push(Math.round(stroke.x[idx]));
+    y.push(Math.round(stroke.y[idx]));
+    t.push(stroke.t[idx] - stroke.t[0]);
+  }
+  return { x, y, t };
+}
+
+function clearDraw() {
+  strokes       = [];
+  currentStroke = null;
+  drawing       = false;
+  const p = state.shuffled[state.current];
+  initCanvas(p ? p.answer.length : 1);
+}
+
+// ============================================================
+//  答え合わせ
+// ============================================================
+async function checkAnswer() {
+  if (!strokes || strokes.length === 0) {
+    alert('まず漢字を書いてください！');
+    return;
+  }
+
+  const btn = document.getElementById('check-btn');
+  btn.disabled   = true;
+  btn.innerHTML  = '<span class="inline-spinner"></span>はんていちゅう…';
+
+  try {
+    // インク形式に変換 [[x[],y[],t[]], ...]
+    const ink = strokes.map(s => [s.x, s.y, s.t]);
+    const inkStr = encodeURIComponent(JSON.stringify(ink));
+    const data = await api({
+      action: 'recognizeHandwriting',
+      ink   : inkStr,
+      w     : canvas.width,
+      h     : canvas.height,
+    });
+
+    const candidates = data.candidates || [];
+    const answer     = state.shuffled[state.current].answer;
+    const correct    = judgeAnswer(answer, candidates);
+
+    btn.disabled  = false;
+    btn.innerHTML = 'かくにんする✅';
+
+    showFeedback(correct, answer, candidates[0] || '');
+  } catch (e) {
+    btn.disabled  = false;
+    btn.innerHTML = 'かくにんする✅';
+    alert('エラーが発生しました。もう一度お試しください。');
+  }
+}
+
+// 正解判定（正規化マッチング）
+function judgeAnswer(answer, candidates) {
+  const normAnswer  = normalize(answer);
+  const answerKanji = kanji(answer);
+  return candidates.some(c => {
+    const nc = normalize(c);
+    if (nc === normAnswer) return true;
+    if (answerKanji && nc.includes(answerKanji)) return true;
+    if (answerKanji && kanji(c) === answerKanji) return true;
+    return false;
+  });
+}
+
+function normalize(s) {
+  return s.replace(/[　\s。、・「」『』（）()]/g, '');
+}
+function kanji(s) {
+  return s.replace(/[^\u4e00-\u9fff]/g, '');
+}
+
+// ============================================================
+//  フィードバック表示
+// ============================================================
+function showFeedback(correct, answer, recognized) {
+  const p = state.shuffled[state.current];
+  state.answeredTotal++;
+  state.answeredSince++;
+
+  if (correct) {
+    state.correct++;
+    showConfetti();
+    document.getElementById('overlay-correct').classList.add('show');
+  } else {
+    state.wrongItems.push({ target: p.target, answer });
+    document.getElementById('wrong-answer-text').innerHTML =
+      `こたえは「<strong style="font-size:1.5rem">${answer}</strong>」だよ！`;
+    document.getElementById('overlay-wrong').classList.add('show');
+  }
+}
+
+function nextQuestion() {
+  document.getElementById('overlay-correct').classList.remove('show');
+  document.getElementById('overlay-wrong').classList.remove('show');
+  document.getElementById('confetti-container').innerHTML = '';
+
+  // ご褒美チェック
+  if (state.answeredSince >= REWARD_EVERY) {
+    state.answeredSince = 0;
+    state.current++;
+    showReward();
+    return;
+  }
+
+  state.current++;
+  renderQuestion();
+}
+
+// ============================================================
+//  紙吹雪
+// ============================================================
+const CONFETTI_COLORS = ['#ff6b35','#ffd700','#4ecdc4','#ff6b8a','#a29bfe','#55efc4'];
+
+function showConfetti() {
+  const container = document.getElementById('confetti-container');
+  container.innerHTML = '';
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left: ${Math.random()*100}%;
+      background: ${CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)]};
+      animation-duration: ${.8 + Math.random()*.8}s;
+      animation-delay: ${Math.random()*.3}s;
+      width: ${6+Math.random()*8}px;
+      height: ${6+Math.random()*8}px;
+      border-radius: ${Math.random() > .5 ? '50%' : '2px'};
+    `;
+    container.appendChild(el);
+  }
+}
+
+// ============================================================
+//  ご褒美画面
+// ============================================================
+function showReward() {
+  const images = state.rewardImages;
+  const img    = images.length ? images[Math.floor(Math.random() * images.length)] : null;
+  const total  = state.shuffled.length;
+  const left   = total - state.current;
+
+  document.getElementById('reward-img').src  = img ? img.url : '';
+  document.getElementById('reward-img').style.display = img ? 'block' : 'none';
+  document.getElementById('reward-title').textContent =
+    `🎊 すごい！${REWARD_EVERY}もんクリア！ 🎊`;
+  document.getElementById('reward-msg').textContent =
+    left > 0 ? `のこり ${left} もん！がんばろう！` : 'ぜんぶおわった！すごい！🏆';
+
+  showScreen('s-reward');
+}
+
+function continueAfterReward() {
+  buildStars();
+  if (state.current >= state.shuffled.length) {
+    showResult();
+  } else {
+    showScreen('s-quiz');
+    renderQuestion();
+  }
+}
+
+// ============================================================
+//  結果画面
+// ============================================================
+function showResult() {
+  const total    = state.shuffled.length;
+  const correct  = state.correct;
+  const pct      = Math.round((correct / total) * 100);
+
+  document.getElementById('result-score').innerHTML =
+    `${correct}<span> / ${total}もん</span>`;
+
+  let msg = '';
+  if (pct === 100) msg = '🏆 パーフェクト！すばらしい！';
+  else if (pct >= 80) msg = '🌟 よくできました！';
+  else if (pct >= 60) msg = '👍 もうすこし！がんばろう！';
+  else msg = '💪 もう一度れんしゅうしよう！';
+  document.getElementById('result-msg').textContent = msg;
+
+  // 間違えたリスト
+  const wrongCard = document.getElementById('wrong-list-card');
+  const wrongList = document.getElementById('wrong-list');
+  if (state.wrongItems.length > 0) {
+    wrongList.innerHTML = '';
+    // 重複除去
+    const seen = new Set();
+    state.wrongItems.filter(w => {
+      if (seen.has(w.answer)) return false;
+      seen.add(w.answer);
+      return true;
+    }).forEach(w => {
+      const div = document.createElement('div');
+      div.className = 'wrong-item';
+      div.innerHTML = `
+        <span class="wrong-kanji">${w.answer}</span>
+        <span class="wrong-reading">${w.target}</span>
+      `;
+      wrongList.appendChild(div);
+    });
+    wrongCard.style.display = 'block';
+  } else {
+    wrongCard.style.display = 'none';
+  }
+
+  showScreen('s-result');
+}
+
+// ============================================================
+//  ユーティリティ
+// ============================================================
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ============================================================
+//  起動チェック
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  if (GAS_URL === 'YOUR_GAS_WEB_APP_URL') {
+    document.querySelector('#s-start .subtitle').textContent =
+      '⚠️ GAS_URL が設定されていません';
+    document.querySelector('#s-start .subtitle').style.color = '#ff4757';
+  }
+});
+</script>
+</body>
+</html>
