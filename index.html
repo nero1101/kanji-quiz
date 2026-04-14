@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>かんじクイズ！✏️</title>
+  <title>漢字クイズ！✏️</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     /* ===== リセット・基本 ===== */
@@ -337,8 +337,8 @@
      ======================================== -->
 <div id="s-start" class="screen active">
   <span class="title-emoji">✏️</span>
-  <h1>かんじクイズ！</h1>
-  <p class="subtitle">漢字をかいて　れんしゅうしよう</p>
+  <h1>漢字クイズ！</h1>
+  <p class="subtitle">漢字をかいて　練習しよう</p>
   <button class="btn btn-primary" onclick="goSetup()">はじめる！</button>
 </div>
 
@@ -346,7 +346,7 @@
      画面2: セットアップ（シリーズ＋ドリル選択）
      ======================================== -->
 <div id="s-setup" class="screen">
-  <h2>⚙️ せってい</h2>
+  <h2>⚙️ 設定（せってい）</h2>
 
   <!-- キャラクター選択 -->
   <div class="card" style="max-width:480px;width:100%">
@@ -378,7 +378,7 @@
      ======================================== -->
 <div id="s-loading" class="screen">
   <div class="spinner"></div>
-  <p style="color:#888;font-size:1rem">もんだいをよみこんでいます…</p>
+  <p style="color:#888;font-size:1rem">問題を読みこんでいます…</p>
 </div>
 
 <!-- ========================================
@@ -404,7 +404,7 @@
     <div class="problem-number" id="p-number"></div>
     <div class="problem-sentence" id="p-sentence"></div>
     <div class="problem-target" id="p-target"></div>
-    <div class="problem-instruction">↑ かんじで書いてみよう！</div>
+    <div class="problem-instruction">↑ 漢字で書いてみよう！</div>
   </div>
 
   <!-- キャンバス -->
@@ -825,21 +825,12 @@ async function checkAnswer() {
   }
 
   const btn = document.getElementById('check-btn');
-  btn.disabled   = true;
-  btn.innerHTML  = '<span class="inline-spinner"></span>はんていちゅう…';
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="inline-spinner"></span>はんていちゅう…';
 
   try {
-    // インク形式に変換 [[x[],y[],t[]], ...]
     const ink = strokes.map(s => [s.x, s.y, s.t]);
-    const inkStr = encodeURIComponent(JSON.stringify(ink));
-    const data = await api({
-      action: 'recognizeHandwriting',
-      ink   : inkStr,
-      w     : canvas.width,
-      h     : canvas.height,
-    });
-
-    const candidates = data.candidates || [];
+    const candidates = await recognizeHandwriting(ink, canvas.width, canvas.height);
     const answer     = state.shuffled[state.current].answer;
     const correct    = judgeAnswer(answer, candidates);
 
@@ -850,8 +841,32 @@ async function checkAnswer() {
   } catch (e) {
     btn.disabled  = false;
     btn.innerHTML = 'かくにんする✅';
-    alert('エラーが発生しました。もう一度お試しください。');
+    alert('エラーが発生しました。もう一度お試しください。\n' + e.message);
   }
+}
+
+// Google Input Tools API を直接呼び出す（GAS不要）
+async function recognizeHandwriting(ink, width, height) {
+  const url  = 'https://inputtools.google.com/request?itc=ja-t-i0-handwrit&num=5';
+  const body = JSON.stringify({
+    requests: [{
+      writing_guide: { writing_area_width: width, writing_area_height: height },
+      ink,
+      language: 'ja',
+    }]
+  });
+
+  const res  = await fetch(url, {
+    method : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+  const data = await res.json();
+  // レスポンス: ["SUCCESS", [["ja-t-i0-handwrit", ["候補1","候補2",...], ...]]]
+  if (data[0] === 'SUCCESS' && data[1]?.[0]?.[1]) {
+    return data[1][0][1];
+  }
+  return [];
 }
 
 // 正解判定（正規化マッチング）
