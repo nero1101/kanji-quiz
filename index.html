@@ -424,6 +424,8 @@
     <div class="problem-instruction">↑ 漢字で書いてみよう！</div>
   </div>
 
+  <div id="char-indicator" style="display:none;text-align:center;font-size:1.1rem;font-weight:700;color:#555;background:#fff;border-radius:12px;padding:8px 16px;width:100%;max-width:480px"></div>
+
   <div class="canvas-wrap">
     <canvas id="draw-canvas"></canvas>
   </div>
@@ -760,7 +762,11 @@ function updateStars() {
 //  キャンバス
 // ============================================================
 let canvas, ctx, strokes, drawing, currentStroke;
-const MIN_CELL = 120;
+// 1文字ずつモード用
+let charMode = false;   // 複数文字のとき true
+let charTotal = 1;      // 答えの文字数
+let charIndex = 0;      // 現在何文字目（0始まり）
+let charResults = [];   // 各文字の認識候補 [{candidates, correct}]
 
 function initCanvas(charCount) {
   if (!canvas) {
@@ -769,39 +775,66 @@ function initCanvas(charCount) {
     setupCanvasEvents();
   }
 
-  const maxW  = Math.min(window.innerWidth - 48, 480);
-  // 最低 MIN_CELL px のセルを確保（3文字でも書きやすいように）
-  const cell  = Math.max(Math.floor(maxW / charCount), MIN_CELL);
-  const totalW = cell * charCount;
-  const totalH = cell;
+  charTotal   = charCount;
+  charIndex   = 0;
+  charResults = [];
+  charMode    = charCount > 1;
 
-  canvas.width        = totalW;
-  canvas.height       = totalH;
-  canvas.style.width  = totalW + 'px';
-  canvas.style.height = totalH + 'px';
+  resetSingleCanvas();
+  updateCharIndicator();
+}
+
+// 1文字分のキャンバスをリセット
+function resetSingleCanvas() {
+  const size = Math.min(window.innerWidth - 48, 280);
+  canvas.width        = size;
+  canvas.height       = size;
+  canvas.style.width  = size + 'px';
+  canvas.style.height = size + 'px';
 
   strokes       = [];
   drawing       = false;
   currentStroke = null;
 
-  drawGuidelines(charCount, cell, totalW, totalH);
+  drawSingleCell(size);
 }
 
-function drawGuidelines(count, cell, W, H) {
-  ctx.clearRect(0, 0, W, H);
+function drawSingleCell(size) {
+  ctx.clearRect(0, 0, size, size);
   ctx.strokeStyle = '#ccc';
   ctx.lineWidth   = 1;
-  for (let i = 0; i < count; i++) {
-    const x = i * cell;
-    ctx.strokeRect(x + 1, 1, cell - 2, H - 2);
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.moveTo(x + cell / 2, 2); ctx.lineTo(x + cell / 2, H - 2);
-    ctx.moveTo(x + 2, H / 2);   ctx.lineTo(x + cell - 2, H / 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
+  ctx.strokeRect(1, 1, size - 2, size - 2);
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.moveTo(size / 2, 2); ctx.lineTo(size / 2, size - 2);
+  ctx.moveTo(2, size / 2); ctx.lineTo(size - 2, size / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
 }
+
+function updateCharIndicator() {
+  const el = document.getElementById('char-indicator');
+  if (!charMode) { el.style.display = 'none'; return; }
+  const p = state.shuffled[state.current];
+  if (!p) return;
+  // 書いた文字は ✅、これから書く文字は下線、まだの文字は薄く
+  let html = '';
+  for (let i = 0; i < charTotal; i++) {
+    const ch = p.answer[i];
+    if (i < charIndex) {
+      const ok = charResults[i]?.correct;
+      html += `<span style="color:${ok?'#2da69e':'#ff4757'};margin:0 4px">${ch}</span>`;
+    } else if (i === charIndex) {
+      html += `<span style="color:#ff6b35;border-bottom:3px solid #ff6b35;padding-bottom:2px;margin:0 4px;font-size:1.4rem">${charTotal}文字中 ${i+1}文字目</span>`;
+    } else {
+      html += `<span style="color:#ddd;margin:0 4px">${ch}</span>`;
+    }
+  }
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+function drawGuidelines() { /* 旧関数・互換のため残す */ }
 
 function setupCanvasEvents() {
   canvas.addEventListener('pointerdown',  onPointerDown, { passive: false });
@@ -868,8 +901,7 @@ function sampleStroke(stroke, maxPts) {
 
 function clearDraw() {
   strokes = []; drawing = false; currentStroke = null;
-  const p = state.shuffled[state.current];
-  initCanvas(p ? p.answer.length : 1);
+  resetSingleCanvas();
 }
 
 // ============================================================
@@ -884,7 +916,6 @@ function showAnswer() {
 
 function skipAfterAnswer() {
   document.getElementById('overlay-answer').classList.remove('show');
-  // 不正解として記録して次へ
   const p = state.shuffled[state.current];
   state.wrongItems.push({ target: p.target, answer: p.answer });
   state.answeredSince++;
@@ -893,7 +924,7 @@ function skipAfterAnswer() {
 }
 
 // ============================================================
-//  答え合わせ
+//  答え合わせ（1文字ずつ対応）
 // ============================================================
 async function checkAnswer() {
   if (!strokes || strokes.length === 0) {
@@ -907,12 +938,39 @@ async function checkAnswer() {
   try {
     const ink        = strokes.map(s => [s.x, s.y, s.t]);
     const candidates = await recognizeHandwriting(ink, canvas.width, canvas.height);
-    const answer     = state.shuffled[state.current].answer;
-    const correct    = judgeAnswer(answer, candidates);
+    const p          = state.shuffled[state.current];
 
-    btn.disabled  = false;
-    btn.innerHTML = 'かくにんする✅';
-    showFeedback(correct, answer);
+    if (!charMode) {
+      // 1文字の問題：そのまま判定
+      const correct = judgeAnswer(p.answer, candidates);
+      btn.disabled  = false;
+      btn.innerHTML = 'かくにんする✅';
+      showFeedback(correct, p.answer);
+    } else {
+      // 複数文字：1文字ずつ記録
+      const targetChar = p.answer[charIndex];
+      const correct    = candidates.some(c => c.includes(targetChar) || c === targetChar);
+      charResults[charIndex] = { candidates, correct };
+      charIndex++;
+
+      btn.disabled  = false;
+      btn.innerHTML = charIndex < charTotal ? `つぎの文字へ ▶` : 'かくにんする✅';
+
+      if (charIndex < charTotal) {
+        // まだ次の文字がある
+        updateCharIndicator();
+        resetSingleCanvas();
+      } else {
+        // 全文字書き終わった → 全部正解なら正解
+        const allCorrect = charResults.every(r => r.correct);
+        updateCharIndicator();
+        // 少し待ってからフィードバック表示
+        setTimeout(() => {
+          btn.innerHTML = 'かくにんする✅';
+          showFeedback(allCorrect, p.answer);
+        }, 300);
+      }
+    }
   } catch (e) {
     btn.disabled  = false;
     btn.innerHTML = 'かくにんする✅';
