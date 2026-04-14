@@ -6,23 +6,21 @@
   <title>漢字クイズ！✏️</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    /* ===== リセット・基本 ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow-x: hidden; }
     body {
       font-family: 'Noto Sans JP', sans-serif;
+      font-size: 18px;
       background: linear-gradient(160deg, #fff9e6 0%, #ffecd2 100%);
       min-height: 100vh;
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* ===== 画面切替 ===== */
-    .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; padding: 24px 16px 40px; }
+    .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; padding: 24px 16px 48px; }
     .screen.active { display: flex; }
 
-    /* ===== 共通パーツ ===== */
-    h1 { font-size: 2.4rem; font-weight: 900; color: #ff6b35; text-shadow: 2px 2px 0 #ffcba0; text-align: center; line-height: 1.2; }
-    h2 { font-size: 1.5rem; font-weight: 700; color: #333; margin-bottom: 16px; text-align: center; }
+    h1 { font-size: 2.6rem; font-weight: 900; color: #ff6b35; text-shadow: 2px 2px 0 #ffcba0; text-align: center; line-height: 1.2; }
+    h2 { font-size: 1.7rem; font-weight: 700; color: #333; margin-bottom: 16px; text-align: center; }
 
     .card {
       background: #fff;
@@ -49,24 +47,34 @@
       text-align: center;
     }
     .btn:active { transform: scale(.96); }
-    .btn-primary   { background: #ff6b35; color: #fff; box-shadow: 0 4px 0 #c94a1a; }
+    .btn-primary  { background: #ff6b35; color: #fff; box-shadow: 0 4px 0 #c94a1a; }
     .btn-primary:active  { box-shadow: 0 1px 0 #c94a1a; transform: translateY(3px); }
-    .btn-secondary { background: #4ecdc4; color: #fff; box-shadow: 0 4px 0 #2da69e; }
+    .btn-secondary{ background: #4ecdc4; color: #fff; box-shadow: 0 4px 0 #2da69e; }
     .btn-secondary:active{ box-shadow: 0 1px 0 #2da69e; transform: translateY(3px); }
-    .btn-ghost     { background: #f0f0f0; color: #555; box-shadow: 0 4px 0 #c8c8c8; }
+    .btn-ghost    { background: #f0f0f0; color: #555; box-shadow: 0 4px 0 #c8c8c8; }
     .btn-ghost:active    { box-shadow: 0 1px 0 #c8c8c8; transform: translateY(3px); }
-    .btn-danger    { background: #ff4757; color: #fff; box-shadow: 0 4px 0 #c0392b; }
+    .btn-answer   { background: #fff3cd; color: #856404; box-shadow: 0 4px 0 #c9a227; border: 2px solid #ffc107; }
+    .btn-answer:active   { box-shadow: 0 1px 0 #c9a227; transform: translateY(3px); }
 
     /* ===== スタート画面 ===== */
-    #s-start { justify-content: center; gap: 32px; }
+    #s-start { justify-content: center; gap: 24px; }
     .title-emoji { font-size: 5rem; animation: bounce 1.5s infinite; display: block; text-align: center; }
-    @keyframes bounce {
-      0%,100% { transform: translateY(0); }
-      50%     { transform: translateY(-12px); }
-    }
-    .subtitle { font-size: 1rem; color: #888; text-align: center; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .subtitle { font-size: 1.1rem; color: #888; text-align: center; }
 
-    /* ===== セットアップ画面 ===== */
+    .resume-card {
+      background: #fff;
+      border: 3px solid #4ecdc4;
+      border-radius: 20px;
+      padding: 16px 20px;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+    }
+    .resume-label { font-size: .9rem; color: #2da69e; font-weight: 700; margin-bottom: 8px; }
+    .resume-info  { font-size: 1rem; color: #333; margin-bottom: 12px; }
+
+    /* ===== セットアップ ===== */
     #s-setup { gap: 20px; }
     .series-grid {
       display: grid;
@@ -81,11 +89,11 @@
       cursor: pointer;
       transition: border-color .15s, background .15s;
       font-family: inherit;
-      font-size: .95rem;
+      font-size: 1rem;
       font-weight: 700;
       text-align: center;
     }
-    .series-btn .series-emoji { font-size: 2.2rem; display: block; margin-bottom: 4px; }
+    .series-btn .series-emoji { font-size: 2.4rem; display: block; margin-bottom: 4px; }
     .series-btn.selected { border-color: #ff6b35; background: #fff5f0; }
 
     .drill-grid {
@@ -94,13 +102,13 @@
       gap: 10px;
     }
     .drill-btn {
-      padding: 12px 4px;
+      padding: 14px 4px;
       border: 3px solid #ddd;
       border-radius: 12px;
       background: #fff;
       cursor: pointer;
       font-family: inherit;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       font-weight: 700;
       transition: border-color .15s, background .15s;
       text-align: center;
@@ -108,10 +116,9 @@
     .drill-btn.selected { border-color: #4ecdc4; background: #f0fffe; color: #2da69e; }
 
     .section-label {
-      font-size: .85rem;
+      font-size: .9rem;
       font-weight: 700;
       color: #888;
-      text-transform: uppercase;
       letter-spacing: .05em;
       margin-bottom: 10px;
     }
@@ -119,7 +126,7 @@
     /* ===== ローディング ===== */
     #s-loading { justify-content: center; gap: 20px; }
     .spinner {
-      width: 60px; height: 60px;
+      width: 64px; height: 64px;
       border: 6px solid #ffd;
       border-top-color: #ff6b35;
       border-radius: 50%;
@@ -127,12 +134,31 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ===== クイズ画面 ===== */
-    #s-quiz { gap: 16px; }
+    /* ===== クイズ ===== */
+    #s-quiz { gap: 14px; }
 
-    .progress-bar-wrap {
+    .quiz-header {
       width: 100%;
       max-width: 480px;
+    }
+    .quiz-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .q-count { font-size: 1rem; color: #888; font-weight: 700; }
+    .q-score { font-size: 1rem; color: #4ecdc4; font-weight: 700; }
+    .quit-btn {
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      color: #bbb;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-family: inherit;
+    }
+    .progress-bar-wrap {
       background: #ffe;
       border-radius: 50px;
       height: 12px;
@@ -148,11 +174,11 @@
 
     .stars-row {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       justify-content: center;
       flex-wrap: wrap;
     }
-    .star { font-size: 1.6rem; transition: transform .2s; }
+    .star { font-size: 1.8rem; transition: transform .2s; }
     .star.lit { animation: starPop .3s ease; }
     @keyframes starPop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.5)} }
 
@@ -165,35 +191,36 @@
       padding: 24px 20px;
       text-align: center;
     }
-    .problem-number { font-size: .85rem; color: #aaa; margin-bottom: 4px; }
+    .problem-number { font-size: .9rem; color: #aaa; margin-bottom: 6px; }
     .problem-sentence {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: #333;
-      line-height: 1.8;
-      margin-bottom: 12px;
+      line-height: 1.9;
+      margin-bottom: 14px;
     }
     .problem-target {
       display: inline-block;
-      font-size: 1.8rem;
+      font-size: 2rem;
       font-weight: 900;
       color: #ff6b35;
       background: #fff5f0;
       border: 2px dashed #ff6b35;
       border-radius: 12px;
-      padding: 4px 16px;
+      padding: 6px 20px;
     }
     .problem-instruction {
       font-size: 1rem;
-      color: #777;
-      margin-top: 8px;
+      color: #888;
+      margin-top: 10px;
     }
 
-    /* ===== キャンバスエリア ===== */
+    /* ===== キャンバス ===== */
     .canvas-wrap {
-      position: relative;
+      width: 100%;
+      max-width: 480px;
+      overflow-x: auto;
       touch-action: none;
-      cursor: crosshair;
     }
     #draw-canvas {
       display: block;
@@ -201,17 +228,21 @@
       background: #fafafa;
       border: 2px solid #ddd;
       touch-action: none;
+      margin: 0 auto;
     }
 
     .canvas-actions {
       display: flex;
-      gap: 12px;
+      flex-direction: column;
+      gap: 10px;
       width: 100%;
       max-width: 480px;
     }
-    .canvas-actions .btn { flex: 1; padding: 14px; font-size: 1rem; }
+    .canvas-row1 { display: flex; gap: 10px; }
+    .canvas-row1 .btn { flex: 1; padding: 16px 8px; font-size: 1.1rem; max-width: none; }
+    .canvas-row2 .btn { width: 100%; max-width: none; padding: 14px; font-size: 1rem; }
 
-    /* ===== 正誤フィードバック ===== */
+    /* ===== 正誤オーバーレイ ===== */
     .overlay {
       display: none;
       position: fixed;
@@ -220,32 +251,47 @@
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      gap: 20px;
+      gap: 24px;
+      padding: 20px;
     }
     .overlay.show { display: flex; }
-    .overlay-correct { background: rgba(80,200,120,.92); }
-    .overlay-wrong   { background: rgba(255,80,80,.88); }
+    .overlay-correct { background: rgba(46, 160, 67, .93); }
+    .overlay-wrong   { background: rgba(30, 30, 100, .95); }
 
-    .feedback-icon { font-size: 7rem; animation: popIn .3s cubic-bezier(.34,1.56,.64,1); }
+    .feedback-icon { font-size: 8rem; animation: popIn .3s cubic-bezier(.34,1.56,.64,1); }
     @keyframes popIn { 0%{transform:scale(0)} 100%{transform:scale(1)} }
-    .feedback-text { font-size: 2rem; font-weight: 900; color: #fff; text-align: center; }
-    .feedback-answer { font-size: 1.1rem; color: rgba(255,255,255,.9); text-align: center; }
+    .feedback-text { font-size: 2.2rem; font-weight: 900; color: #fff; text-align: center; }
+    .feedback-answer {
+      font-size: 1.4rem;
+      color: #fff;
+      text-align: center;
+      background: rgba(255,255,255,.15);
+      border-radius: 16px;
+      padding: 16px 28px;
+      line-height: 1.6;
+    }
+    .feedback-answer strong {
+      display: block;
+      font-size: 3rem;
+      color: #ffd700;
+      margin-top: 8px;
+    }
     .feedback-next {
       background: #fff;
       border: none;
       border-radius: 50px;
-      padding: 14px 40px;
+      padding: 16px 48px;
       font-family: inherit;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       font-weight: 700;
       cursor: pointer;
+      color: #333;
     }
 
     /* ===== 紙吹雪 ===== */
     .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 99; overflow: hidden; }
     .confetti-piece {
       position: absolute;
-      width: 10px; height: 10px;
       border-radius: 2px;
       animation: confettiFall linear forwards;
     }
@@ -254,12 +300,8 @@
       100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
     }
 
-    /* ===== ご褒美画面 ===== */
-    #s-reward {
-      justify-content: center;
-      padding: 0;
-      background: #111;
-    }
+    /* ===== ご褒美 ===== */
+    #s-reward { justify-content: center; padding: 0; background: #111; }
     .reward-bg { position: fixed; inset: 0; background: #000; z-index: 0; }
     .reward-content {
       position: relative;
@@ -271,8 +313,8 @@
       padding: 32px 16px;
       animation: rewardIn .5s cubic-bezier(.34,1.56,.64,1);
     }
-    @keyframes rewardIn { 0%{transform:scale(0) rotate(-10deg); opacity:0} 100%{transform:scale(1) rotate(0); opacity:1} }
-    .reward-title { font-size: 2.5rem; font-weight: 900; color: #ffd700; text-shadow: 0 0 20px #ff6b35; text-align: center; }
+    @keyframes rewardIn { 0%{transform:scale(0) rotate(-10deg);opacity:0} 100%{transform:scale(1) rotate(0);opacity:1} }
+    .reward-title { font-size: 2.6rem; font-weight: 900; color: #ffd700; text-shadow: 0 0 20px #ff6b35; text-align: center; }
     .reward-img {
       max-width: min(90vw, 480px);
       max-height: 60vh;
@@ -280,126 +322,101 @@
       box-shadow: 0 0 40px rgba(255,215,0,.4);
       object-fit: contain;
     }
-    .reward-msg { font-size: 1.1rem; color: #fff; text-align: center; }
+    .reward-emoji { font-size: 8rem; text-align: center; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+    .reward-msg { font-size: 1.2rem; color: #fff; text-align: center; }
 
-    /* ===== 結果画面 ===== */
+    /* ===== 結果 ===== */
     #s-result { justify-content: center; gap: 24px; }
-    .result-score {
-      font-size: 5rem;
-      font-weight: 900;
-      color: #ff6b35;
-      text-align: center;
-      line-height: 1;
-    }
-    .result-score span { font-size: 1.8rem; color: #888; }
-    .result-msg { font-size: 1.2rem; color: #555; text-align: center; }
+    .result-score { font-size: 5rem; font-weight: 900; color: #ff6b35; text-align: center; line-height: 1; }
+    .result-score span { font-size: 2rem; color: #888; }
+    .result-msg { font-size: 1.3rem; color: #555; text-align: center; }
     .wrong-list { width: 100%; max-width: 480px; }
-    .wrong-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
-      font-size: 1rem;
-    }
-    .wrong-kanji { font-size: 1.5rem; font-weight: 700; color: #ff4757; min-width: 60px; }
-    .wrong-reading { color: #888; }
+    .wrong-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eee; }
+    .wrong-kanji  { font-size: 1.7rem; font-weight: 700; color: #ff4757; min-width: 72px; }
+    .wrong-reading{ font-size: 1.1rem; color: #666; }
 
     /* ===== エラー ===== */
     .error-box {
-      background: #fff0f0;
-      border: 2px solid #ff4757;
-      border-radius: 12px;
-      padding: 16px;
-      color: #c0392b;
-      font-size: .95rem;
-      width: 100%;
-      max-width: 480px;
+      background: #fff0f0; border: 2px solid #ff4757; border-radius: 12px;
+      padding: 16px; color: #c0392b; font-size: 1rem;
+      width: 100%; max-width: 480px;
     }
 
-    /* ===== ローディングスピナー（インライン）===== */
     .inline-spinner {
-      display: inline-block;
-      width: 20px; height: 20px;
-      border: 3px solid rgba(255,255,255,.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .6s linear infinite;
-      vertical-align: middle;
-      margin-right: 8px;
+      display: inline-block; width: 20px; height: 20px;
+      border: 3px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite;
+      vertical-align: middle; margin-right: 8px;
     }
   </style>
 </head>
 <body>
 
-<!-- ========================================
-     画面1: スタート
-     ======================================== -->
+<!-- ========== 画面1: スタート ========== -->
 <div id="s-start" class="screen active">
   <span class="title-emoji">✏️</span>
   <h1>漢字クイズ！</h1>
   <p class="subtitle">漢字をかいて　練習しよう</p>
-  <button class="btn btn-primary" onclick="goSetup()">はじめる！</button>
+
+  <!-- 続きから再開（保存データがある場合に表示） -->
+  <div id="resume-card" class="resume-card" style="display:none">
+    <div class="resume-label">📌 前回のつづき</div>
+    <div class="resume-info" id="resume-info"></div>
+    <button class="btn btn-secondary" onclick="resumeQuiz()" style="max-width:none;margin:0 auto 8px">つづきから▶</button>
+    <button style="background:none;border:none;color:#aaa;font-size:.9rem;cursor:pointer;font-family:inherit" onclick="clearSave()">最初からやり直す</button>
+  </div>
+
+  <button class="btn btn-primary" onclick="goSetup()">新しくはじめる！</button>
 </div>
 
-<!-- ========================================
-     画面2: セットアップ（シリーズ＋ドリル選択）
-     ======================================== -->
+<!-- ========== 画面2: セットアップ ========== -->
 <div id="s-setup" class="screen">
-  <h2>⚙️ 設定（せってい）</h2>
+  <h2>⚙️ 設定</h2>
 
-  <!-- キャラクター選択 -->
   <div class="card" style="max-width:480px;width:100%">
     <div class="section-label">🎁 ごほうびキャラクター</div>
     <div id="series-grid" class="series-grid">
-      <p style="color:#aaa;font-size:.9rem">よみこみ中...</p>
+      <p style="color:#aaa">よみこみ中...</p>
     </div>
   </div>
 
-  <!-- ドリル選択 -->
   <div class="card" style="max-width:480px;width:100%">
     <div class="section-label">📚 ドリルをえらぶ（いくつでもOK）</div>
     <div id="drill-grid" class="drill-grid">
-      <p style="color:#aaa;font-size:.9rem">よみこみ中...</p>
+      <p style="color:#aaa">よみこみ中...</p>
     </div>
   </div>
 
   <div id="setup-error" style="display:none" class="error-box"></div>
 
-  <button class="btn btn-primary" id="start-btn" onclick="startQuiz()" disabled
-          style="opacity:.5;max-width:320px">
+  <button class="btn btn-primary" id="start-btn" onclick="startQuiz()" disabled style="opacity:.5;max-width:320px">
     スタート！🚀
   </button>
   <button class="btn btn-ghost" onclick="showScreen('s-start')" style="max-width:320px">もどる</button>
 </div>
 
-<!-- ========================================
-     画面3: ローディング
-     ======================================== -->
+<!-- ========== 画面3: ローディング ========== -->
 <div id="s-loading" class="screen">
   <div class="spinner"></div>
-  <p style="color:#888;font-size:1rem">問題を読みこんでいます…</p>
+  <p style="color:#888;font-size:1.1rem">問題を読みこんでいます…</p>
 </div>
 
-<!-- ========================================
-     画面4: クイズ
-     ======================================== -->
+<!-- ========== 画面4: クイズ ========== -->
 <div id="s-quiz" class="screen">
-  <!-- 進捗バー -->
-  <div style="width:100%;max-width:480px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span id="q-count" style="font-size:.9rem;color:#888"></span>
-      <span id="q-score" style="font-size:.9rem;color:#4ecdc4;font-weight:700"></span>
+  <div class="quiz-header">
+    <div class="quiz-header-top">
+      <span class="q-count" id="q-count"></span>
+      <span class="q-score" id="q-score"></span>
+      <button class="quit-btn" onclick="confirmQuit()">⏸ やめる</button>
     </div>
     <div class="progress-bar-wrap">
       <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
     </div>
   </div>
 
-  <!-- ⭐ スター（10問ごとのご褒美カウンター）-->
   <div class="stars-row" id="stars-row"></div>
 
-  <!-- 問題カード -->
   <div class="problem-card">
     <div class="problem-number" id="p-number"></div>
     <div class="problem-sentence" id="p-sentence"></div>
@@ -407,20 +424,22 @@
     <div class="problem-instruction">↑ 漢字で書いてみよう！</div>
   </div>
 
-  <!-- キャンバス -->
   <div class="canvas-wrap">
-    <canvas id="draw-canvas" width="320" height="200"></canvas>
+    <canvas id="draw-canvas"></canvas>
   </div>
 
   <div class="canvas-actions">
-    <button class="btn btn-ghost" onclick="clearDraw()">けす🗑️</button>
-    <button class="btn btn-primary" id="check-btn" onclick="checkAnswer()">かくにんする✅</button>
+    <div class="canvas-row1">
+      <button class="btn btn-ghost" onclick="clearDraw()">けす🗑️</button>
+      <button class="btn btn-primary" id="check-btn" onclick="checkAnswer()">かくにんする✅</button>
+    </div>
+    <div class="canvas-row2">
+      <button class="btn btn-answer" onclick="showAnswer()">答えを見る👁️</button>
+    </div>
   </div>
 </div>
 
-<!-- ========================================
-     正誤フィードバック（オーバーレイ）
-     ======================================== -->
+<!-- ========== 正誤オーバーレイ ========== -->
 <div id="overlay-correct" class="overlay overlay-correct">
   <div class="feedback-icon">⭕</div>
   <div class="feedback-text">せいかい！🎉</div>
@@ -434,16 +453,24 @@
   <button class="feedback-next" onclick="nextQuestion()">つぎへ ▶</button>
 </div>
 
+<div id="overlay-answer" class="overlay" style="background:rgba(0,0,0,.88)">
+  <div class="feedback-icon">👁️</div>
+  <div class="feedback-text" style="color:#ffd700">こたえ</div>
+  <div class="feedback-answer" id="show-answer-text"></div>
+  <button class="feedback-next" onclick="skipAfterAnswer()">つぎへ ▶</button>
+</div>
+
 <div class="confetti-container" id="confetti-container"></div>
 
-<!-- ========================================
-     画面5: ご褒美
-     ======================================== -->
+<!-- ========== 画面5: ご褒美 ========== -->
 <div id="s-reward" class="screen">
   <div class="reward-bg"></div>
   <div class="reward-content">
     <div class="reward-title" id="reward-title">🎊 すごい！10もんクリア！ 🎊</div>
-    <img id="reward-img" class="reward-img" src="" alt="ごほうび" onerror="this.style.display='none'">
+    <img id="reward-img" class="reward-img" src="" alt="" style="display:none"
+         onload="this.style.display='block'"
+         onerror="this.style.display='none'; document.getElementById('reward-emoji').style.display='block'">
+    <div id="reward-emoji" class="reward-emoji" style="display:none">🎉</div>
     <div class="reward-msg" id="reward-msg"></div>
     <button class="btn btn-primary" onclick="continueAfterReward()" style="max-width:280px">
       つづける！💪
@@ -451,20 +478,15 @@
   </div>
 </div>
 
-<!-- ========================================
-     画面6: 結果
-     ======================================== -->
+<!-- ========== 画面6: 結果 ========== -->
 <div id="s-result" class="screen">
-  <h1 style="font-size:2rem">けっか！📊</h1>
+  <h1 style="font-size:2.2rem">けっか！📊</h1>
 
   <div class="card" style="max-width:480px;width:100%;text-align:center">
-    <div class="result-score" id="result-score">
-      0<span>てん</span>
-    </div>
-    <div class="result-msg" id="result-msg" style="margin-top:8px"></div>
+    <div class="result-score" id="result-score">0<span>てん</span></div>
+    <div class="result-msg" id="result-msg" style="margin-top:10px"></div>
   </div>
 
-  <!-- 間違えた漢字リスト -->
   <div class="card wrong-list" id="wrong-list-card" style="max-width:480px;display:none">
     <div class="section-label">📝 もう一度れんしゅうしよう</div>
     <div id="wrong-list"></div>
@@ -474,30 +496,27 @@
   <button class="btn btn-ghost"   onclick="showScreen('s-start')" style="max-width:320px">トップへ</button>
 </div>
 
-<!-- ========================================
-     スクリプト
-     ======================================== -->
 <script>
 // ============================================================
-//  設定 ── デプロイ後に GAS の URL に書き換えてください
+//  設定
 // ============================================================
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby23IUfujJUfA37-nCd2TNfM9fmY4JnQxUPGKa1mcSXZP_P-LXGh123akBCjw6Lq5U1/exec';
+const GAS_URL    = 'https://script.google.com/macros/s/AKfycby23IUfujJUfA37-nCd2TNfM9fmY4JnQxUPGKa1mcSXZP_P-LXGh123akBCjw6Lq5U1/exec';
+const SAVE_KEY   = 'kanji_quiz_save';
+const REWARD_EVERY = 10;
 
 // ============================================================
-//  アプリ状態
+//  状態
 // ============================================================
 const state = {
-  seriesList     : [],
-  selectedSeries : null,
-  selectedDrills : new Set(),
-  problems       : [],
-  shuffled       : [],
-  current        : 0,
-  correct        : 0,
-  answeredTotal  : 0,
-  answeredSince  : 0,   // ご褒美までのカウンター
-  wrongItems     : [],
-  rewardImages   : [],
+  seriesList    : [],
+  selectedSeries: null,
+  selectedDrills: new Set(),
+  shuffled      : [],
+  current       : 0,
+  correct       : 0,
+  answeredSince : 0,
+  wrongItems    : [],
+  rewardImages  : [],
 };
 
 // ============================================================
@@ -510,40 +529,103 @@ function showScreen(id) {
 }
 
 // ============================================================
-//  GAS API 呼び出し
+//  進捗の保存・読込（localStorage）
+// ============================================================
+function saveProgress() {
+  const save = {
+    shuffled      : state.shuffled,
+    current       : state.current,
+    correct       : state.correct,
+    answeredSince : state.answeredSince,
+    wrongItems    : state.wrongItems,
+    selectedSeries: state.selectedSeries,
+    rewardImages  : state.rewardImages,
+    selectedDrills: [...state.selectedDrills],
+    savedAt       : Date.now(),
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+}
+
+function loadSave() {
+  try {
+    const s = localStorage.getItem(SAVE_KEY);
+    if (!s) return null;
+    return JSON.parse(s);
+  } catch { return null; }
+}
+
+function clearSave() {
+  localStorage.removeItem(SAVE_KEY);
+  document.getElementById('resume-card').style.display = 'none';
+}
+
+function checkResume() {
+  const save = loadSave();
+  if (!save || save.current >= save.shuffled.length) { clearSave(); return; }
+  const left = save.shuffled.length - save.current;
+  document.getElementById('resume-info').textContent =
+    `ドリル ${[...new Set(save.shuffled.map(p=>p.drillNum))].join('・')}｜のこり ${left} もん`;
+  document.getElementById('resume-card').style.display = 'block';
+}
+
+function resumeQuiz() {
+  const save = loadSave();
+  if (!save) return;
+  state.shuffled       = save.shuffled;
+  state.current        = save.current;
+  state.correct        = save.correct;
+  state.answeredSince  = save.answeredSince;
+  state.wrongItems     = save.wrongItems;
+  state.selectedSeries = save.selectedSeries;
+  state.rewardImages   = save.rewardImages;
+  state.selectedDrills = new Set(save.selectedDrills);
+  buildStars();
+  showScreen('s-quiz');
+  renderQuestion();
+}
+
+// ============================================================
+//  途中でやめる
+// ============================================================
+function confirmQuit() {
+  if (confirm('やめますか？\nつづきは次回「つづきから」で再開できます。')) {
+    saveProgress();
+    showScreen('s-start');
+    checkResume();
+  }
+}
+
+// ============================================================
+//  GAS API
 // ============================================================
 async function api(params) {
   const url = GAS_URL + '?' + new URLSearchParams(params).toString();
-  const res  = await fetch(url);
+  const res = await fetch(url);
   return res.json();
 }
 
 // ============================================================
-//  スタート → セットアップ画面
+//  セットアップ画面
 // ============================================================
 async function goSetup() {
   showScreen('s-setup');
   document.getElementById('setup-error').style.display = 'none';
-
-  // シリーズ一覧を取得
   try {
     const [sData, dData] = await Promise.all([
       api({ action: 'getRewardSeries' }),
       api({ action: 'getDrillList' }),
     ]);
-
     renderSeriesGrid(sData.series || []);
     renderDrillGrid(dData.drills || []);
   } catch (e) {
-    showSetupError('サーバーへの接続に失敗しました。GAS_URL を確認してください。\n' + e.message);
+    showSetupError('接続に失敗しました。\n' + e.message);
   }
 }
 
 function renderSeriesGrid(series) {
   state.seriesList = series;
   const grid = document.getElementById('series-grid');
-  if (!series.length) { grid.innerHTML = '<p style="color:#aaa;font-size:.9rem">シリーズがありません</p>'; return; }
-
+  if (!series.length) { grid.innerHTML = '<p style="color:#aaa">シリーズがありません</p>'; return; }
   grid.innerHTML = '';
   series.forEach((s, i) => {
     const btn = document.createElement('button');
@@ -556,14 +638,13 @@ function renderSeriesGrid(series) {
       updateStartBtn();
     };
     grid.appendChild(btn);
-    if (i === 0) btn.click(); // デフォルト選択
+    if (i === 0) btn.click();
   });
 }
 
 function renderDrillGrid(drills) {
   const grid = document.getElementById('drill-grid');
-  if (!drills.length) { grid.innerHTML = '<p style="color:#aaa;font-size:.9rem">ドリルがありません</p>'; return; }
-
+  if (!drills.length) { grid.innerHTML = '<p style="color:#aaa">ドリルがありません</p>'; return; }
   grid.innerHTML = '';
   drills.forEach(d => {
     const btn = document.createElement('button');
@@ -580,16 +661,16 @@ function renderDrillGrid(drills) {
 }
 
 function updateStartBtn() {
-  const ok = state.selectedSeries && state.selectedDrills.size > 0;
+  const ok  = state.selectedSeries && state.selectedDrills.size > 0;
   const btn = document.getElementById('start-btn');
-  btn.disabled = !ok;
+  btn.disabled      = !ok;
   btn.style.opacity = ok ? '1' : '.5';
 }
 
 function showSetupError(msg) {
   const el = document.getElementById('setup-error');
-  el.textContent = msg;
-  el.style.display = 'block';
+  el.textContent     = msg;
+  el.style.display   = 'block';
 }
 
 // ============================================================
@@ -597,34 +678,28 @@ function showSetupError(msg) {
 // ============================================================
 async function startQuiz() {
   showScreen('s-loading');
-
   try {
-    // 問題とご褒美画像を並行取得
     const [pData, rData] = await Promise.all([
       api({ action: 'getProblems', drills: [...state.selectedDrills].join(',') }),
       api({ action: 'getRewardImages', folderId: state.selectedSeries.folderId }),
     ]);
-
     if (!pData.problems || pData.problems.length === 0) {
       showSetupError('選択したドリルに問題がありません。');
       showScreen('s-setup');
       return;
     }
-
-    state.problems       = pData.problems;
-    state.shuffled       = shuffle([...pData.problems]);
-    state.rewardImages   = rData.images || [];
-    state.current        = 0;
-    state.correct        = 0;
-    state.answeredTotal  = 0;
-    state.answeredSince  = 0;
-    state.wrongItems     = [];
-
+    state.shuffled      = shuffle([...pData.problems]);
+    state.rewardImages  = rData.images || [];
+    state.current       = 0;
+    state.correct       = 0;
+    state.answeredSince = 0;
+    state.wrongItems    = [];
+    clearSave();
     buildStars();
     showScreen('s-quiz');
     renderQuestion();
   } catch (e) {
-    showSetupError('問題の読み込みに失敗しました。\n' + e.message);
+    showSetupError('読み込みに失敗しました。\n' + e.message);
     showScreen('s-setup');
   }
 }
@@ -639,18 +714,12 @@ function renderQuestion() {
 
   const p = state.shuffled[idx];
 
-  // 進捗
   document.getElementById('q-count').textContent  = `${idx + 1} / ${total}`;
   document.getElementById('q-score').textContent  = `⭐ ${state.correct} せいかい`;
   document.getElementById('progress-fill').style.width = ((idx / total) * 100) + '%';
-
-  // スター更新
   updateStars();
 
-  // 問題文
-  document.getElementById('p-number').textContent   = `ドリル ${p.drillNum} ⬩ もんだい ${p.questionNum}`;
-
-  // 文章中の target を赤くマーク
+  document.getElementById('p-number').textContent = `ドリル ${p.drillNum} ⬩ もんだい ${p.questionNum}`;
   const sentence = p.sentence.replace(
     p.target,
     `<span style="color:#ff6b35;font-weight:900">${p.target}</span>`
@@ -658,23 +727,20 @@ function renderQuestion() {
   document.getElementById('p-sentence').innerHTML = sentence;
   document.getElementById('p-target').textContent = `「 ${p.target} 」`;
 
-  // キャンバスリセット
   initCanvas(p.answer.length);
 }
 
 // ============================================================
-//  スターUI
+//  スター
 // ============================================================
-const REWARD_EVERY = 10;
-
 function buildStars() {
   const row = document.getElementById('stars-row');
   row.innerHTML = '';
   for (let i = 0; i < REWARD_EVERY; i++) {
     const s = document.createElement('span');
-    s.className = 'star';
+    s.className   = 'star';
     s.textContent = '☆';
-    s.id = 'star-' + i;
+    s.id          = 'star-' + i;
     row.appendChild(s);
   }
 }
@@ -685,14 +751,16 @@ function updateStars() {
     if (!el) return;
     const lit = i < state.answeredSince;
     el.textContent = lit ? '⭐' : '☆';
-    if (lit && !el.classList.contains('lit')) el.classList.add('lit');
+    if (lit) el.classList.add('lit');
+    else el.classList.remove('lit');
   }
 }
 
 // ============================================================
-//  キャンバス描画
+//  キャンバス
 // ============================================================
-let canvas, ctx, strokes, drawing, currentStroke, canvasInited = false;
+let canvas, ctx, strokes, drawing, currentStroke;
+const MIN_CELL = 120;
 
 function initCanvas(charCount) {
   if (!canvas) {
@@ -701,14 +769,14 @@ function initCanvas(charCount) {
     setupCanvasEvents();
   }
 
-  // サイズ決定（1文字あたり最大160px）
-  const maxW   = Math.min(window.innerWidth - 48, 480);
-  const cell   = Math.min(Math.floor(maxW / Math.max(charCount, 1)), 160);
+  const maxW  = Math.min(window.innerWidth - 48, 480);
+  // 最低 MIN_CELL px のセルを確保（3文字でも書きやすいように）
+  const cell  = Math.max(Math.floor(maxW / charCount), MIN_CELL);
   const totalW = cell * charCount;
   const totalH = cell;
 
-  canvas.width  = totalW;
-  canvas.height = totalH;
+  canvas.width        = totalW;
+  canvas.height       = totalH;
   canvas.style.width  = totalW + 'px';
   canvas.style.height = totalH + 'px';
 
@@ -721,20 +789,15 @@ function initCanvas(charCount) {
 
 function drawGuidelines(count, cell, W, H) {
   ctx.clearRect(0, 0, W, H);
-  ctx.strokeStyle = '#ddd';
+  ctx.strokeStyle = '#ccc';
   ctx.lineWidth   = 1;
-
   for (let i = 0; i < count; i++) {
     const x = i * cell;
-    // 外枠
     ctx.strokeRect(x + 1, 1, cell - 2, H - 2);
-    // 田字格（補助線）
-    ctx.setLineDash([4, 4]);
+    ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.moveTo(x + cell / 2, 2);
-    ctx.lineTo(x + cell / 2, H - 2);
-    ctx.moveTo(x + 2, H / 2);
-    ctx.lineTo(x + cell - 2, H / 2);
+    ctx.moveTo(x + cell / 2, 2); ctx.lineTo(x + cell / 2, H - 2);
+    ctx.moveTo(x + 2, H / 2);   ctx.lineTo(x + cell - 2, H / 2);
     ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -749,12 +812,9 @@ function setupCanvasEvents() {
 
 function getPos(e) {
   const rect = canvas.getBoundingClientRect();
-  const sx   = canvas.width  / rect.width;
-  const sy   = canvas.height / rect.height;
-  return {
-    x: (e.clientX - rect.left) * sx,
-    y: (e.clientY - rect.top)  * sy,
-  };
+  const sx = canvas.width  / rect.width;
+  const sy = canvas.height / rect.height;
+  return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
 }
 
 function onPointerDown(e) {
@@ -762,8 +822,8 @@ function onPointerDown(e) {
   drawing       = true;
   const p       = getPos(e);
   currentStroke = { x: [p.x], y: [p.y], t: [Date.now()] };
-  ctx.lineWidth   = 4;
-  ctx.strokeStyle = '#222';
+  ctx.lineWidth   = 5;
+  ctx.strokeStyle = '#111';
   ctx.lineCap     = 'round';
   ctx.lineJoin    = 'round';
   ctx.beginPath();
@@ -793,7 +853,6 @@ function onPointerUp() {
   currentStroke = null;
 }
 
-// ストロークをダウンサンプリング（URL長さ対策）
 function sampleStroke(stroke, maxPts) {
   if (stroke.x.length <= maxPts) return stroke;
   const step = (stroke.x.length - 1) / (maxPts - 1);
@@ -808,11 +867,29 @@ function sampleStroke(stroke, maxPts) {
 }
 
 function clearDraw() {
-  strokes       = [];
-  currentStroke = null;
-  drawing       = false;
+  strokes = []; drawing = false; currentStroke = null;
   const p = state.shuffled[state.current];
   initCanvas(p ? p.answer.length : 1);
+}
+
+// ============================================================
+//  答えを見る
+// ============================================================
+function showAnswer() {
+  const p = state.shuffled[state.current];
+  document.getElementById('show-answer-text').innerHTML =
+    `「 ${p.target} 」は<strong>${p.answer}</strong>`;
+  document.getElementById('overlay-answer').classList.add('show');
+}
+
+function skipAfterAnswer() {
+  document.getElementById('overlay-answer').classList.remove('show');
+  // 不正解として記録して次へ
+  const p = state.shuffled[state.current];
+  state.wrongItems.push({ target: p.target, answer: p.answer });
+  state.answeredSince++;
+  updateStars();
+  checkRewardOrNext();
 }
 
 // ============================================================
@@ -823,78 +900,57 @@ async function checkAnswer() {
     alert('まず漢字を書いてください！');
     return;
   }
-
   const btn = document.getElementById('check-btn');
   btn.disabled  = true;
   btn.innerHTML = '<span class="inline-spinner"></span>はんていちゅう…';
 
   try {
-    const ink = strokes.map(s => [s.x, s.y, s.t]);
+    const ink        = strokes.map(s => [s.x, s.y, s.t]);
     const candidates = await recognizeHandwriting(ink, canvas.width, canvas.height);
     const answer     = state.shuffled[state.current].answer;
     const correct    = judgeAnswer(answer, candidates);
 
     btn.disabled  = false;
     btn.innerHTML = 'かくにんする✅';
-
-    showFeedback(correct, answer, candidates[0] || '');
+    showFeedback(correct, answer);
   } catch (e) {
     btn.disabled  = false;
     btn.innerHTML = 'かくにんする✅';
-    alert('エラーが発生しました。もう一度お試しください。\n' + e.message);
+    alert('エラーが発生しました。\n' + e.message);
   }
 }
 
-// Google Input Tools API を直接呼び出す（GAS不要）
 async function recognizeHandwriting(ink, width, height) {
   const url  = 'https://inputtools.google.com/request?itc=ja-t-i0-handwrit&num=5';
   const body = JSON.stringify({
-    requests: [{
-      writing_guide: { writing_area_width: width, writing_area_height: height },
-      ink,
-      language: 'ja',
-    }]
+    requests: [{ writing_guide: { writing_area_width: width, writing_area_height: height }, ink, language: 'ja' }]
   });
-
-  const res  = await fetch(url, {
-    method : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-  });
+  const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
   const data = await res.json();
-  // レスポンス: ["SUCCESS", [["ja-t-i0-handwrit", ["候補1","候補2",...], ...]]]
-  if (data[0] === 'SUCCESS' && data[1]?.[0]?.[1]) {
-    return data[1][0][1];
-  }
+  if (data[0] === 'SUCCESS' && data[1]?.[0]?.[1]) return data[1][0][1];
   return [];
 }
 
-// 正解判定（正規化マッチング）
 function judgeAnswer(answer, candidates) {
-  const normAnswer  = normalize(answer);
-  const answerKanji = kanji(answer);
+  const normA = normalize(answer);
+  const kanjiA = kanji(answer);
   return candidates.some(c => {
     const nc = normalize(c);
-    if (nc === normAnswer) return true;
-    if (answerKanji && nc.includes(answerKanji)) return true;
-    if (answerKanji && kanji(c) === answerKanji) return true;
+    if (nc === normA) return true;
+    if (kanjiA && kanji(c) === kanjiA) return true;
+    if (kanjiA && nc.includes(kanjiA)) return true;
     return false;
   });
 }
 
-function normalize(s) {
-  return s.replace(/[　\s。、・「」『』（）()]/g, '');
-}
-function kanji(s) {
-  return s.replace(/[^\u4e00-\u9fff]/g, '');
-}
+function normalize(s) { return s.replace(/[　\s。、・「」『』（）()]/g, ''); }
+function kanji(s)     { return s.replace(/[^\u4e00-\u9fff]/g, ''); }
 
 // ============================================================
-//  フィードバック表示
+//  フィードバック
 // ============================================================
-function showFeedback(correct, answer, recognized) {
+function showFeedback(correct, answer) {
   const p = state.shuffled[state.current];
-  state.answeredTotal++;
   state.answeredSince++;
 
   if (correct) {
@@ -904,7 +960,7 @@ function showFeedback(correct, answer, recognized) {
   } else {
     state.wrongItems.push({ target: p.target, answer });
     document.getElementById('wrong-answer-text').innerHTML =
-      `こたえは「<strong style="font-size:1.5rem">${answer}</strong>」だよ！`;
+      `「 ${p.target} 」は<strong>${answer}</strong>`;
     document.getElementById('overlay-wrong').classList.add('show');
   }
 }
@@ -913,40 +969,41 @@ function nextQuestion() {
   document.getElementById('overlay-correct').classList.remove('show');
   document.getElementById('overlay-wrong').classList.remove('show');
   document.getElementById('confetti-container').innerHTML = '';
+  checkRewardOrNext();
+}
 
-  // ご褒美チェック
+function checkRewardOrNext() {
   if (state.answeredSince >= REWARD_EVERY) {
     state.answeredSince = 0;
     state.current++;
+    saveProgress();
     showReward();
-    return;
+  } else {
+    state.current++;
+    saveProgress();
+    renderQuestion();
   }
-
-  state.current++;
-  renderQuestion();
 }
 
 // ============================================================
 //  紙吹雪
 // ============================================================
 const CONFETTI_COLORS = ['#ff6b35','#ffd700','#4ecdc4','#ff6b8a','#a29bfe','#55efc4'];
-
 function showConfetti() {
-  const container = document.getElementById('confetti-container');
-  container.innerHTML = '';
-  for (let i = 0; i < 50; i++) {
+  const c = document.getElementById('confetti-container');
+  c.innerHTML = '';
+  for (let i = 0; i < 60; i++) {
     const el = document.createElement('div');
     el.className = 'confetti-piece';
     el.style.cssText = `
-      left: ${Math.random()*100}%;
-      background: ${CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)]};
-      animation-duration: ${.8 + Math.random()*.8}s;
-      animation-delay: ${Math.random()*.3}s;
-      width: ${6+Math.random()*8}px;
-      height: ${6+Math.random()*8}px;
-      border-radius: ${Math.random() > .5 ? '50%' : '2px'};
+      left:${Math.random()*100}%;
+      background:${CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)]};
+      animation-duration:${.8+Math.random()*.8}s;
+      animation-delay:${Math.random()*.3}s;
+      width:${6+Math.random()*8}px; height:${6+Math.random()*8}px;
+      border-radius:${Math.random()>.5?'50%':'2px'};
     `;
-    container.appendChild(el);
+    c.appendChild(el);
   }
 }
 
@@ -955,54 +1012,61 @@ function showConfetti() {
 // ============================================================
 function showReward() {
   const images = state.rewardImages;
-  const img    = images.length ? images[Math.floor(Math.random() * images.length)] : null;
   const total  = state.shuffled.length;
   const left   = total - state.current;
 
-  document.getElementById('reward-img').src  = img ? img.url : '';
-  document.getElementById('reward-img').style.display = img ? 'block' : 'none';
-  document.getElementById('reward-title').textContent =
-    `🎊 すごい！${REWARD_EVERY}もんクリア！ 🎊`;
-  document.getElementById('reward-msg').textContent =
+  document.getElementById('reward-title').textContent = `🎊 すごい！${REWARD_EVERY}もんクリア！ 🎊`;
+  document.getElementById('reward-msg').textContent   =
     left > 0 ? `のこり ${left} もん！がんばろう！` : 'ぜんぶおわった！すごい！🏆';
+
+  const imgEl   = document.getElementById('reward-img');
+  const emojiEl = document.getElementById('reward-emoji');
+  imgEl.style.display   = 'none';
+  emojiEl.style.display = 'none';
+
+  if (images.length > 0) {
+    const item  = images[Math.floor(Math.random() * images.length)];
+    // drive.google.com/uc?id=XXX → lh3.googleusercontent.com/d/XXX（表示が安定）
+    let url = item.url;
+    const m = url.match(/[?&]id=([^&]+)/);
+    if (m) url = `https://lh3.googleusercontent.com/d/${m[1]}`;
+    imgEl.src = url;
+    // onload/onerror で表示切替（HTMLに設定済み）
+  } else {
+    emojiEl.style.display = 'block';
+    emojiEl.textContent   = state.selectedSeries?.emoji || '🎉';
+  }
 
   showScreen('s-reward');
 }
 
 function continueAfterReward() {
   buildStars();
-  if (state.current >= state.shuffled.length) {
-    showResult();
-  } else {
-    showScreen('s-quiz');
-    renderQuestion();
-  }
+  if (state.current >= state.shuffled.length) showResult();
+  else { showScreen('s-quiz'); renderQuestion(); }
 }
 
 // ============================================================
 //  結果画面
 // ============================================================
 function showResult() {
-  const total    = state.shuffled.length;
-  const correct  = state.correct;
-  const pct      = Math.round((correct / total) * 100);
-
+  clearSave();
+  const total  = state.shuffled.length;
+  const pct    = Math.round((state.correct / total) * 100);
   document.getElementById('result-score').innerHTML =
-    `${correct}<span> / ${total}もん</span>`;
+    `${state.correct}<span> / ${total}もん</span>`;
 
   let msg = '';
-  if (pct === 100) msg = '🏆 パーフェクト！すばらしい！';
-  else if (pct >= 80) msg = '🌟 よくできました！';
-  else if (pct >= 60) msg = '👍 もうすこし！がんばろう！';
-  else msg = '💪 もう一度れんしゅうしよう！';
+  if (pct === 100)     msg = '🏆 パーフェクト！すばらしい！';
+  else if (pct >= 80)  msg = '🌟 よくできました！';
+  else if (pct >= 60)  msg = '👍 もうすこし！がんばろう！';
+  else                 msg = '💪 もう一度れんしゅうしよう！';
   document.getElementById('result-msg').textContent = msg;
 
-  // 間違えたリスト
   const wrongCard = document.getElementById('wrong-list-card');
   const wrongList = document.getElementById('wrong-list');
   if (state.wrongItems.length > 0) {
     wrongList.innerHTML = '';
-    // 重複除去
     const seen = new Set();
     state.wrongItems.filter(w => {
       if (seen.has(w.answer)) return false;
@@ -1011,17 +1075,13 @@ function showResult() {
     }).forEach(w => {
       const div = document.createElement('div');
       div.className = 'wrong-item';
-      div.innerHTML = `
-        <span class="wrong-kanji">${w.answer}</span>
-        <span class="wrong-reading">${w.target}</span>
-      `;
+      div.innerHTML = `<span class="wrong-kanji">${w.answer}</span><span class="wrong-reading">${w.target}</span>`;
       wrongList.appendChild(div);
     });
     wrongCard.style.display = 'block';
   } else {
     wrongCard.style.display = 'none';
   }
-
   showScreen('s-result');
 }
 
@@ -1037,14 +1097,10 @@ function shuffle(arr) {
 }
 
 // ============================================================
-//  起動チェック
+//  起動
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
-  if (GAS_URL === 'YOUR_GAS_WEB_APP_URL') {
-    document.querySelector('#s-start .subtitle').textContent =
-      '⚠️ GAS_URL が設定されていません';
-    document.querySelector('#s-start .subtitle').style.color = '#ff4757';
-  }
+  checkResume();
 });
 </script>
 </body>
