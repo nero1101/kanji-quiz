@@ -769,23 +769,38 @@ function initCanvas(charCount) {
 
   const size = Math.min(window.innerWidth - 48, 280);
 
+  // 外枠コンテナ（全キャンバスをひとつの枠で囲む）
+  const box = document.createElement('div');
+  box.style.cssText = `
+    width:${size}px; margin:0 auto;
+    border:2px solid #ddd; border-radius:16px;
+    overflow:hidden; background:#fafafa;
+  `;
+
   for (let i = 0; i < charCount; i++) {
-    // ラベル
-    const label = document.createElement('div');
-    label.style.cssText = 'font-size:.95rem;font-weight:700;color:#888;text-align:center;margin-bottom:2px';
-    label.textContent = charCount > 1 ? `${i + 1}文字目` : '';
+    // 2文字目以降は区切り線
+    if (i > 0) {
+      const divider = document.createElement('div');
+      divider.style.cssText = `height:2px;background:#ddd;width:100%;`;
+      box.appendChild(divider);
+    }
+
+    // 文字番号ラベル（複数文字のとき）
+    if (charCount > 1) {
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:.85rem;font-weight:700;color:#bbb;text-align:right;padding:4px 10px 0;';
+      label.textContent = `${i + 1}文字目`;
+      box.appendChild(label);
+    }
 
     // キャンバス
     const cvs = document.createElement('canvas');
     cvs.width        = size;
     cvs.height       = size;
-    cvs.style.cssText= `display:block;margin:0 auto;border-radius:12px;background:#fafafa;border:2px solid #ddd;touch-action:none;`;
+    cvs.style.cssText = `display:block;touch-action:none;background:transparent;`;
 
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'width:100%';
-    if (charCount > 1) wrap.appendChild(label);
-    wrap.appendChild(cvs);
-    stack.appendChild(wrap);
+    box.appendChild(cvs);
+    stack.appendChild(box);
 
     const ctx = cvs.getContext('2d');
     const entry = { canvas: cvs, ctx, strokes: [], drawing: false, currentStroke: null };
@@ -798,13 +813,13 @@ function initCanvas(charCount) {
 
 function drawCell(ctx, size) {
   ctx.clearRect(0, 0, size, size);
-  ctx.strokeStyle = '#ccc';
+  // 田字格（補助線のみ・外枠はCSSで描画）
+  ctx.strokeStyle = '#e0e0e0';
   ctx.lineWidth   = 1;
-  ctx.strokeRect(1, 1, size - 2, size - 2);
   ctx.setLineDash([6, 6]);
   ctx.beginPath();
-  ctx.moveTo(size / 2, 2); ctx.lineTo(size / 2, size - 2);
-  ctx.moveTo(2, size / 2); ctx.lineTo(size - 2, size / 2);
+  ctx.moveTo(size / 2, 4); ctx.lineTo(size / 2, size - 4);
+  ctx.moveTo(4, size / 2); ctx.lineTo(size - 4, size / 2);
   ctx.stroke();
   ctx.setLineDash([]);
 }
