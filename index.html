@@ -738,6 +738,7 @@ function showSetupError(msg) {
 //  クイズ開始
 // ============================================================
 async function startQuiz() {
+  startBgm(); // ← ボタン押下直後（awaitより前）に呼ぶことで自動再生ブロックを回避
   showScreen('s-loading');
   try {
     const [pData, rData] = await Promise.all([
@@ -745,6 +746,7 @@ async function startQuiz() {
       api({ action: 'getRewardImages', folderId: state.selectedSeries.folderId }),
     ]);
     if (!pData.problems || pData.problems.length === 0) {
+      stopBgm();
       showSetupError('選択したドリルに問題がありません。');
       showScreen('s-setup');
       return;
@@ -758,7 +760,6 @@ async function startQuiz() {
     clearSave();
     buildStars();
     showScreen('s-quiz');
-    startBgm();
     renderQuestion();
   } catch (e) {
     showSetupError('読み込みに失敗しました。\n' + e.message);
