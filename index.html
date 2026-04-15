@@ -417,15 +417,22 @@
     <div class="bgm-header">
       <span class="bgm-title">🎵 BGM</span>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:.85rem;color:#888" id="bgm-status-label">オン</span>
-        <input type="checkbox" id="bgm-toggle" class="toggle-input" checked
+        <span style="font-size:.85rem;color:#888" id="bgm-status-label">オフ</span>
+        <input type="checkbox" id="bgm-toggle" class="toggle-input"
                onchange="onBgmToggleChange(this.checked)">
         <label for="bgm-toggle" class="toggle-label"></label>
       </div>
     </div>
-    <select id="bgm-select" onchange="onBgmSelectChange()">
-      <option value="">♪ BGMをえらぶ</option>
-    </select>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="bgm-select" style="flex:1" onchange="onBgmSelectChange()">
+        <option value="">♪ BGMをえらぶ</option>
+      </select>
+      <button id="bgm-play-btn" onclick="onBgmPlayBtn()"
+              style="flex-shrink:0;width:44px;height:44px;border-radius:50%;border:2px solid #4ecdc4;background:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        ▶
+      </button>
+    </div>
+    <div id="bgm-error" style="display:none;font-size:.8rem;color:#c0392b;margin-top:8px;line-height:1.5"></div>
   </div>
 
   <button class="btn btn-primary" onclick="goSetup()">新しくはじめる！</button>
@@ -1247,7 +1254,7 @@ function showResult() {
 //  BGM
 // ============================================================
 let bgmAudio     = null;
-let bgmCurrentId = null; // 現在再生中のファイルID
+let bgmCurrentId = null;
 
 async function loadBgmList() {
   try {
@@ -1268,31 +1275,76 @@ async function loadBgmList() {
   } catch (e) { /* BGMは任意機能なので失敗しても無視 */ }
 }
 
+// ▶/⏸ ボタン（手動再生・停止）
+function onBgmPlayBtn() {
+  if (bgmAudio && !bgmAudio.paused) {
+    stopBgm();
+    updateBgmBtn();
+  } else {
+    startBgm();
+  }
+}
+
+function updateBgmBtn() {
+  const btn = document.getElementById('bgm-play-btn');
+  if (!btn) return;
+  btn.textContent = (bgmAudio && !bgmAudio.paused) ? '⏸' : '▶';
+}
+
 // トグルON/OFF
 function onBgmToggleChange(checked) {
   document.getElementById('bgm-status-label').textContent = checked ? 'オン' : 'オフ';
   if (checked) startBgm();
-  else stopBgm();
+  else { stopBgm(); updateBgmBtn(); }
 }
 
-// 曲を選択したら即プレビュー再生
+// 曲変更
 function onBgmSelectChange() {
-  startBgm();
+  if (bgmAudio) startBgm(); // 再生中なら曲を切り替え
 }
 
 function startBgm() {
   const toggle = document.getElementById('bgm-toggle');
   const sel    = document.getElementById('bgm-select');
+  const errEl  = document.getElementById('bgm-error');
+  if (errEl) errEl.style.display = 'none';
   if (!toggle?.checked || !sel?.value) return;
+
   const fileId = sel.value;
-  // 同じ曲がすでに再生中なら何もしない（クイズ画面遷移時に曲を途切れさせない）
   if (bgmAudio && bgmCurrentId === fileId && !bgmAudio.paused) return;
   stopBgm();
-  bgmCurrentId     = fileId;
-  bgmAudio         = new Audio(`https://drive.google.com/uc?export=download&id=${fileId}`);
-  bgmAudio.loop    = true;
-  bgmAudio.volume  = 0.4;
-  bgmAudio.play().catch(() => {});
+  bgmCurrentId = fileId;
+
+  // confirm=t でウイルス確認ページをバイパス
+  bgmAudio = new Audio(`https://drive.google.com/uc?export=download&confirm=t&id=${fileId}`);
+  bgmAudio.loop   = true;
+  bgmAudio.volume = 0.4;
+
+  bgmAudio.addEventListener('playing', () => {
+    updateBgmBtn();
+    if (errEl) errEl.style.display = 'none';
+  });
+  bgmAudio.addEventListener('pause', updateBgmBtn);
+  bgmAudio.addEventListener('error', () => {
+    if (errEl) {
+      errEl.innerHTML = '⚠️ 音源を読み込めませんでした。<br>ドライブのファイルが「リンクを知っている全員」で共有されているか確認してください。';
+      errEl.style.display = 'block';
+    }
+    updateBgmBtn();
+  });
+
+  bgmAudio.play()
+    .then(() => { updateBgmBtn(); })
+    .catch(err => {
+      // 自動再生ブロックの場合はボタンを▶のままにする（手動再生を促す）
+      if (err.name === 'NotAllowedError') {
+        if (errEl) {
+          errEl.textContent = '▶ ボタンを押すと再生できます';
+          errEl.style.cssText += 'color:#2da69e;display:block';
+        }
+      }
+      updateBgmBtn();
+    });
 }
 
 function stopBgm() {
