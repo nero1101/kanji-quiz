@@ -1258,19 +1258,22 @@ let bgmCurrentId = null;
 
 async function loadBgmList() {
   try {
-    const data = await api({ action: 'getBgmList' });
-    const list = data.bgms || [];
+    // bgm/list.json を読み込む（GitHub Pages に直接置いた音源）
+    const res  = await fetch('./bgm/list.json');
+    if (!res.ok) return;
+    const list = await res.json();
     if (!list.length) return;
+
     const sel  = document.getElementById('bgm-select');
     const card = document.getElementById('bgm-card');
     sel.innerHTML = '<option value="">♪ BGMをえらぶ</option>';
     list.forEach(b => {
       const opt = document.createElement('option');
-      opt.value       = b.fileId;
+      opt.value       = `./bgm/${b.file}`; // 直接URLをvalueに
       opt.textContent = b.name;
       sel.appendChild(opt);
     });
-    if (list.length > 0) sel.value = list[0].fileId;
+    if (list.length > 0) sel.value = `./bgm/${list[0].file}`;
     card.style.display = 'block';
   } catch (e) { /* BGMは任意機能なので失敗しても無視 */ }
 }
@@ -1310,13 +1313,12 @@ function startBgm() {
   if (errEl) errEl.style.display = 'none';
   if (!toggle?.checked || !sel?.value) return;
 
-  const fileId = sel.value;
-  if (bgmAudio && bgmCurrentId === fileId && !bgmAudio.paused) return;
+  const url = sel.value;
+  if (bgmAudio && bgmCurrentId === url && !bgmAudio.paused) return;
   stopBgm();
-  bgmCurrentId = fileId;
+  bgmCurrentId = url;
 
-  // confirm=t でウイルス確認ページをバイパス
-  bgmAudio = new Audio(`https://drive.google.com/uc?export=download&confirm=t&id=${fileId}`);
+  bgmAudio = new Audio(url);
   bgmAudio.loop   = true;
   bgmAudio.volume = 0.4;
 
