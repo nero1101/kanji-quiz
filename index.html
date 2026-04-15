@@ -255,7 +255,7 @@
       padding: 20px;
     }
     .overlay.show { display: flex; }
-    .overlay-correct { background: rgba(46, 160, 67, .93); }
+    .overlay-correct { background: rgba(220, 255, 220, .92); }
     .overlay-wrong   { background: rgba(30, 30, 100, .95); }
 
     .feedback-icon { font-size: 8rem; animation: popIn .3s cubic-bezier(.34,1.56,.64,1); }
@@ -502,7 +502,7 @@
 <!-- ========== 正誤オーバーレイ ========== -->
 <div id="overlay-correct" class="overlay overlay-correct">
   <div class="feedback-icon">⭕</div>
-  <div class="feedback-text">せいかい！🎉</div>
+  <div class="feedback-text" style="color:#2e7d32">せいかい！🎉</div>
   <button class="feedback-next" onclick="nextQuestion()">つぎへ ▶</button>
 </div>
 
@@ -1246,7 +1246,8 @@ function showResult() {
 // ============================================================
 //  BGM
 // ============================================================
-let bgmAudio = null;
+let bgmAudio     = null;
+let bgmCurrentId = null; // 現在再生中のファイルID
 
 async function loadBgmList() {
   try {
@@ -1267,21 +1268,28 @@ async function loadBgmList() {
   } catch (e) { /* BGMは任意機能なので失敗しても無視 */ }
 }
 
+// トグルON/OFF
 function onBgmToggleChange(checked) {
   document.getElementById('bgm-status-label').textContent = checked ? 'オン' : 'オフ';
-  if (!checked) stopBgm();
+  if (checked) startBgm();
+  else stopBgm();
 }
 
+// 曲を選択したら即プレビュー再生
 function onBgmSelectChange() {
-  if (bgmAudio) startBgm(); // 再生中なら曲変更
+  startBgm();
 }
 
 function startBgm() {
   const toggle = document.getElementById('bgm-toggle');
   const sel    = document.getElementById('bgm-select');
   if (!toggle?.checked || !sel?.value) return;
+  const fileId = sel.value;
+  // 同じ曲がすでに再生中なら何もしない（クイズ画面遷移時に曲を途切れさせない）
+  if (bgmAudio && bgmCurrentId === fileId && !bgmAudio.paused) return;
   stopBgm();
-  bgmAudio         = new Audio(`https://drive.google.com/uc?export=download&id=${sel.value}`);
+  bgmCurrentId     = fileId;
+  bgmAudio         = new Audio(`https://drive.google.com/uc?export=download&id=${fileId}`);
   bgmAudio.loop    = true;
   bgmAudio.volume  = 0.4;
   bgmAudio.play().catch(() => {});
@@ -1293,6 +1301,7 @@ function stopBgm() {
     bgmAudio.currentTime = 0;
     bgmAudio = null;
   }
+  bgmCurrentId = null;
 }
 
 // ============================================================
