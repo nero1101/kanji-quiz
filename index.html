@@ -178,8 +178,8 @@
       justify-content: center;
       flex-wrap: wrap;
     }
-    .star { font-size: 1.8rem; transition: transform .2s; }
-    .star.lit { animation: starPop .3s ease; }
+    .star { font-size: 1.8rem; transition: transform .2s; color: #ccc; }
+    .star.lit { animation: starPop .3s ease; color: #f5c518; }
     @keyframes starPop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.5)} }
 
     .problem-card {
@@ -459,7 +459,7 @@
   <div id="setup-error" style="display:none" class="error-box"></div>
 
   <button class="btn btn-primary" id="start-btn" onclick="startQuiz()" disabled style="opacity:.5;max-width:320px">
-    スタート！🚀
+    スタート！
   </button>
   <button class="btn btn-ghost" onclick="showScreen('s-start')" style="max-width:320px">もどる</button>
 </div>
@@ -498,7 +498,7 @@
   <div class="canvas-actions">
     <div class="canvas-row1">
       <button class="btn btn-ghost" onclick="clearDraw()">全部けす🗑️</button>
-      <button class="btn btn-primary" id="check-btn" onclick="checkAnswer()">かくにんする✅</button>
+      <button class="btn btn-primary" id="check-btn" onclick="checkAnswer()">かくにんする</button>
     </div>
     <div class="canvas-row2">
       <button class="btn btn-answer" onclick="showAnswer()">答えを見る🔍</button>
@@ -540,7 +540,7 @@
     <div id="reward-emoji" class="reward-emoji" style="display:none">🎉</div>
     <div class="reward-msg" id="reward-msg"></div>
     <button class="btn btn-primary" onclick="continueAfterReward()" style="max-width:280px">
-      つづける！💪
+      つづける！
     </button>
   </div>
 </div>
@@ -559,7 +559,7 @@
     <div id="wrong-list"></div>
   </div>
 
-  <button class="btn btn-primary" onclick="goSetup()" style="max-width:320px">もう一度！🔁</button>
+  <button class="btn btn-primary" onclick="goSetup()" style="max-width:320px">もう一度！</button>
   <button class="btn btn-ghost"   onclick="showScreen('s-start')" style="max-width:320px">トップへ</button>
 </div>
 
@@ -809,7 +809,7 @@ function buildStars() {
   for (let i = 0; i < REWARD_EVERY; i++) {
     const s = document.createElement('span');
     s.className   = 'star';
-    s.textContent = '☆';
+    s.textContent = '★';
     s.id          = 'star-' + i;
     row.appendChild(s);
   }
@@ -820,7 +820,7 @@ function updateStars() {
     const el = document.getElementById('star-' + i);
     if (!el) return;
     const lit = i < state.answeredSince;
-    el.textContent = lit ? '⭐' : '☆';
+    el.textContent = '★'; // 絵文字を使わずCSSで色を制御
     if (lit) el.classList.add('lit');
     else el.classList.remove('lit');
   }
@@ -1074,11 +1074,11 @@ async function checkAnswer() {
     const allCorrect = results.every(r => r);
 
     btn.disabled  = false;
-    btn.innerHTML = 'かくにんする✅';
+    btn.innerHTML = 'かくにんする';
     showFeedback(allCorrect, p.answer);
   } catch (e) {
     btn.disabled  = false;
-    btn.innerHTML = 'かくにんする✅';
+    btn.innerHTML = 'かくにんする';
     alert('エラーが発生しました。\n' + e.message);
   }
 }
@@ -1269,11 +1269,12 @@ async function loadBgmList() {
     sel.innerHTML = '<option value="">♪ BGMをえらぶ</option>';
     list.forEach(b => {
       const opt = document.createElement('option');
-      opt.value       = `./bgm/${b.file}`; // 直接URLをvalueに
+      // 日本語ファイル名に対応するためURLエンコード
+      opt.value       = `./bgm/${encodeURIComponent(b.file)}`;
       opt.textContent = b.name;
       sel.appendChild(opt);
     });
-    if (list.length > 0) sel.value = `./bgm/${list[0].file}`;
+    if (list.length > 0) sel.value = `./bgm/${encodeURIComponent(list[0].file)}`;
     card.style.display = 'block';
   } catch (e) { /* BGMは任意機能なので失敗しても無視 */ }
 }
@@ -1329,7 +1330,7 @@ function startBgm() {
   bgmAudio.addEventListener('pause', updateBgmBtn);
   bgmAudio.addEventListener('error', () => {
     if (errEl) {
-      errEl.innerHTML = '⚠️ 音源を読み込めませんでした。<br>ドライブのファイルが「リンクを知っている全員」で共有されているか確認してください。';
+      errEl.innerHTML = '⚠️ 音源を読み込めませんでした。<br>list.json のファイル名と、bgmフォルダに置いたMP3のファイル名が一致しているか確認してください。';
       errEl.style.display = 'block';
     }
     updateBgmBtn();
