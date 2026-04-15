@@ -510,6 +510,7 @@
 <div id="overlay-correct" class="overlay overlay-correct">
   <div class="feedback-icon">⭕</div>
   <div class="feedback-text" style="color:#2e7d32">せいかい！🎉</div>
+  <div id="correct-answer-text" style="font-size:2.8rem;font-weight:bold;color:#1b5e20;margin:4px 0 12px"></div>
   <button class="feedback-next" onclick="nextQuestion()">つぎへ ▶</button>
 </div>
 
@@ -1119,6 +1120,7 @@ function showFeedback(correct, answer) {
   if (correct) {
     state.correct++;
     showConfetti();
+    document.getElementById('correct-answer-text').textContent = p.answer;
     document.getElementById('overlay-correct').classList.add('show');
   } else {
     state.wrongItems.push({ target: p.target, answer });
