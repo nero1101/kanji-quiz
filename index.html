@@ -398,8 +398,21 @@
 </head>
 <body>
 
+<!-- ========== 画面0: パスワード ========== -->
+<div id="s-password" class="screen active" style="justify-content:center;gap:20px">
+  <span style="font-size:4rem">🔐</span>
+  <h1 style="font-size:2rem">パスワードを入力</h1>
+  <div class="card" style="max-width:320px;text-align:center">
+    <input id="pw-input" type="password" placeholder="パスワード"
+      style="width:100%;padding:14px 16px;font-size:1.2rem;border:2px solid #ddd;border-radius:12px;font-family:inherit;text-align:center;outline:none;margin-bottom:12px"
+      onkeydown="if(event.key==='Enter')checkPassword()">
+    <div id="pw-error" style="color:#e74c3c;font-size:.9rem;min-height:1.2em;margin-bottom:8px"></div>
+    <button class="btn btn-primary" onclick="checkPassword()">はいる</button>
+  </div>
+</div>
+
 <!-- ========== 画面1: スタート ========== -->
-<div id="s-start" class="screen active">
+<div id="s-start" class="screen">
   <span class="title-emoji">✏️</span>
   <h1>漢字クイズ！</h1>
   <p class="subtitle">漢字をかいて　練習しよう</p>
@@ -1461,7 +1474,41 @@ function shuffle(arr) {
 // ============================================================
 //  起動
 // ============================================================
+// ============================================================
+//  パスワード認証（照合はGAS側で行う）
+// ============================================================
+async function checkPassword() {
+  const input = document.getElementById('pw-input').value.trim();
+  if (!input) return;
+
+  const btn = document.querySelector('#s-password .btn-primary');
+  btn.disabled = true;
+  btn.textContent = '確認中…';
+  document.getElementById('pw-error').textContent = '';
+
+  try {
+    const data = await api({ action: 'checkPassword', pw: input });
+    if (data.ok) {
+      localStorage.setItem('kq_auth', '1');
+      showScreen('s-start');
+    } else {
+      document.getElementById('pw-error').textContent = 'パスワードが違います';
+      document.getElementById('pw-input').value = '';
+      document.getElementById('pw-input').focus();
+    }
+  } catch(e) {
+    document.getElementById('pw-error').textContent = '通信エラーが発生しました';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'はいる';
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
+  // 認証済みならパスワード画面をスキップ
+  if (localStorage.getItem('kq_auth') === '1') {
+    showScreen('s-start');
+  }
   checkResume();
   loadBgmList();
 });
