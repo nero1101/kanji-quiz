@@ -1051,6 +1051,10 @@ function drawCell(ctx, size) {
 }
 
 function setupCanvasEventsFor(cvs, entry) {
+  // iOS Safari対策: タッチ時のスクロールを明示的にキャンセル
+  cvs.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  cvs.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
+
   cvs.addEventListener('pointerdown', e => {
     e.preventDefault();
     entry.drawing       = true;
