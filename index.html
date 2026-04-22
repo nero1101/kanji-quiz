@@ -682,10 +682,27 @@ function confirmQuit() {
 // ============================================================
 //  GAS API
 // ============================================================
+function getAuthToken_() {
+  try { return JSON.parse(localStorage.getItem('kq_auth') || 'null'); } catch { return null; }
+}
+
 async function api(params) {
-  const url = GAS_URL + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url);
-  return res.json();
+  const auth = getAuthToken_();
+  const allParams = { ...params };
+  if (auth && auth.token) {
+    allParams.token = auth.token;
+    allParams.exp   = auth.exp;
+  }
+  const url = GAS_URL + '?' + new URLSearchParams(allParams).toString();
+  const res  = await fetch(url);
+  const data = await res.json();
+  // トークン無効・期限切れならパスワード画面へ
+  if (data.error === 'unauthorized') {
+    localStorage.removeItem('kq_auth');
+    showScreen('s-password');
+    throw new Error('セッションが切れました。再度パスワードを入力してください。');
+  }
+  return data;
 }
 
 // ============================================================
@@ -1495,15 +1512,24 @@ async function checkPassword() {
   try {
     const data = await api({ action: 'checkPassword', pw: input });
     if (data.ok) {
-      localStorage.setItem('kq_auth', '1');
+      localStorage.setItem('kq_auth', JSON.stringify({ token: data.token, exp: data.exp }));
       showScreen('s-start');
+      checkResume();
+      loadBgmList();
+    } else if (data.locked) {
+      const min = Math.ceil(data.remaining / 60);
+      document.getElementById('pw-error').textContent =
+        `間違えすぎたため${min}分間ロックされています`;
+      document.getElementById('pw-input').value = '';
     } else {
-      document.getElementById('pw-error').textContent = 'パスワードが違います';
+      const left = data.remaining_attempts ?? '';
+      document.getElementById('pw-error').textContent =
+        `パスワードが違います${left !== '' ? `（あと${left}回で一時ロック）` : ''}`;
       document.getElementById('pw-input').value = '';
       document.getElementById('pw-input').focus();
     }
   } catch(e) {
-    document.getElementById('pw-error').textContent = '通信エラーが発生しました';
+    document.getElementById('pw-error').textContent = e.message || '通信エラーが発生しました';
   } finally {
     btn.disabled = false;
     btn.textContent = 'はいる';
@@ -1511,12 +1537,16 @@ async function checkPassword() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  // 認証済みならパスワード画面をスキップ
-  if (localStorage.getItem('kq_auth') === '1') {
+  const auth = getAuthToken_();
+  // トークンが有効な場合のみパスワード画面をスキップ
+  if (auth && auth.token && auth.exp && Date.now() < auth.exp) {
     showScreen('s-start');
+    checkResume();
+    loadBgmList();
+  } else {
+    localStorage.removeItem('kq_auth');
+    showScreen('s-password');
   }
-  checkResume();
-  loadBgmList();
 });
 </script>
 </body>
